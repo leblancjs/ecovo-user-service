@@ -119,6 +119,35 @@ func updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func createUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var user user
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		log.Print(err)
+	}
+
+	// TODO: Remove mock response
+	if user.Preferences == nil {
+		user.Preferences = &userPreferences{}
+	}
+	user.Preferences.Smoking = occasionally
+	user.Preferences.Animals = occasionally
+	user.Preferences.Conversation = occasionally
+	user.Preferences.Music = occasionally
+
+	user.SignUpPhase = new(int)
+	*user.SignUpPhase = 0
+
+	w.WriteHeader(http.StatusCreated)
+
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/users/{id}", getUserByIDHandler).
@@ -126,6 +155,9 @@ func main() {
 		Headers("Content-Type", "application/json")
 	r.HandleFunc("/users/{id}", updateUserByIDHandler).
 		Methods("PATCH").
+		Headers("Content-Type", "application/json")
+	r.HandleFunc("/users", createUserHandler).
+		Methods("POST").
 		Headers("Content-Type", "application/json")
 
 	log.Fatal(http.ListenAndServe(":8080", r))

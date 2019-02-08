@@ -66,7 +66,63 @@ Content-Type: application/json
 ```
 
 ### POST /users
-TODO: Fill out this section.
+#### Request
+##### Headers
+```
+Content-Type: application/json
+```
+
+##### Body
+The following example shows all the fields that can be included:
+```
+{
+    "id": "{id}", // MANDATORY
+    "email": "{email}",
+    "firstName": "{firstName}",
+    "lastName": "{lastName",
+    "dateOfBirth": "{timestamp}",
+    "phoneNumber": "{phoneNumber}",
+    "gender": "{Male|Female}",
+    "photo": "{photoUrl}",
+    "description": "{description}",
+    "preferences": {
+        "smoking": "{0|1|2}",
+        "animals": "{0|1|2}",
+        "conversation": "{0|1|2}",
+        "music": "{0|1|2}"
+    }
+}
+```
+
+#### Response
+##### Status Code
+201 CREATED upon success
+
+##### Headers
+```
+Content-Type: application/json
+```
+
+##### Body
+```
+{
+    "email": "{email}",
+    "firstName": "{firstName}",
+    "lastName": "{lastName}",
+    "dateOfBirth": "{dateOfBirth}",
+    "phoneNumber": "{phoneNumber}",
+    "gender": "{gender}",
+    "photo": "{photo}",
+    "description": "{description}",
+    "preferences": {
+        "smoking": {0|1|2},
+        "animals": {0|1|2},
+        "conversation": {0|1|2},
+        "music": {0|1|2}
+    },
+    "signUpPhase": {0|1}
+}
+```
 
 ### PATCH /users/{id}
 #### URL Parameters
