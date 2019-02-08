@@ -9,5 +9,9 @@
 			"revisionTime": "2019-01-25T16:05:53Z"
 		}
 	],
-	"rootPath": "azure.com/ecovo/user-service"
+	"rootPath": "azure.com/ecovo/user-service",
+	"heroku": {
+		"install": [ "./..." ],
+		"goVersion": "go1.9.3"
+	}
 }

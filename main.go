@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -149,6 +150,11 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	r := mux.NewRouter()
 	r.HandleFunc("/users/{id}", getUserByIDHandler).
 		Methods("GET").
@@ -160,5 +166,5 @@ func main() {
 		Methods("POST").
 		Headers("Content-Type", "application/json")
 
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }
