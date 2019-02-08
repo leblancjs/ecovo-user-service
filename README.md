@@ -24,6 +24,10 @@ TODO: Fill out this section.
 TODO: Fill out this section.
 
 ### GET /users/{id}
+#### URL Parameters
+##### id
+The user's unique identifier obtained from Auth0 when sign-in/sign-up is completed.
+
 #### Request
 ##### Headers
 ```
@@ -31,6 +35,9 @@ Content-Type: application/json
 ```
 
 #### Response
+##### Status Code(s)
+200 OK upon success
+
 ##### Headers
 ```
 Content-Type: application/json
@@ -39,6 +46,7 @@ Content-Type: application/json
 ##### Body
 ```
 {
+    "id": "{id}",
     "email": "{email}",
     "firstName": "{firstName}",
     "lastName": "{lastName",
@@ -52,7 +60,8 @@ Content-Type: application/json
         "animals": "{0|1|2}",
         "conversation": "{0|1|2}",
         "music": "{0|1|2}"
-    }
+    },
+    "signUpPhase": "{0|1}"
 }
 ```
 
@@ -60,4 +69,42 @@ Content-Type: application/json
 TODO: Fill out this section.
 
 ### PATCH /users/{id}
-TODO: Fill out this section.
+#### URL Parameters
+##### id
+The user's unique identifier obtained from Auth0 when sign-in/sign-up is completed.
+
+#### Request
+##### Headers
+```
+Content-Type: application/json
+```
+
+##### Body
+The following example shows all the fields that can be modified:
+```
+{
+    "firstName": "{firstName}",
+    "lastName": "{lastName}",
+    "dateOfBirth": "{dateOfBirth}",
+    "phoneNumber": "{phoneNumber}",
+    "gender": "{gender}",
+    "photo": "{photo}",
+    "description": "{description}",
+    "preferences": {
+        "smoking": {0|1|2},
+        "animals": {0|1|2},
+        "conversation": {0|1|2},
+        "music": {0|1|2}
+    },
+    "signUpPhase": {0|1}
+}
+```
+
+#### Response
+##### Status Code(s)
+200 OK upon success
+
+##### Headers
+```
+Content-Type: application/json
+```

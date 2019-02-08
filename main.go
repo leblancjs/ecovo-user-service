@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -24,16 +23,17 @@ type userPreferences struct {
 }
 
 type user struct {
-	ID          int             `json:"id"`
-	Email       string          `json:"email"`
-	FirstName   string          `json:"firstName"`
-	LastName    string          `json:"lastName"`
-	DateOfBirth time.Time       `json:"dateOfBirth"`
-	PhoneNumber string          `json:"phoneNumber"`
-	Gender      string          `json:"gender"`
-	Photo       string          `json:"photo"`
-	Description string          `json:"description"`
-	Preferences userPreferences `json:"preferences"`
+	ID          string           `json:"id"`
+	Email       string           `json:"email"`
+	FirstName   string           `json:"firstName"`
+	LastName    string           `json:"lastName"`
+	DateOfBirth time.Time        `json:"dateOfBirth"`
+	PhoneNumber string           `json:"phoneNumber"`
+	Gender      string           `json:"gender"`
+	Photo       string           `json:"photo"`
+	Description string           `json:"description"`
+	Preferences *userPreferences `json:"preferences"`
+	SignUpPhase *int             `json:"signUpPhase"`
 }
 
 var mockPrefs = userPreferences{
@@ -43,7 +43,7 @@ var mockPrefs = userPreferences{
 	Music:        occasionally}
 
 var mockUser = user{
-	ID:          12345,
+	ID:          "12345",
 	Email:       "harold@hide-the-pain.com",
 	FirstName:   "Harold",
 	LastName:    "The Great",
@@ -52,27 +52,81 @@ var mockUser = user{
 	Gender:      "Male",
 	Photo:       "https://hungarytoday.hu/wp-content/uploads/2018/02/18ps27.jpg",
 	Description: "So much pain.",
-	Preferences: mockPrefs}
+	Preferences: &mockPrefs,
+	SignUpPhase: nil}
 
 func getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+	w.Header().Set("Content-Type", "application/json")
 
-	id, _ := strconv.Atoi(vars["id"])
+	vars := mux.Vars(r)
+	id := vars["id"]
 
 	// TODO: Remove mock response
 	mockUser.ID = id
-	json, _ := json.Marshal(mockUser)
 
+	err := json.NewEncoder(w).Encode(mockUser)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+func updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	// TODO: Remove mock response
+	mockUser.ID = id
+
+	var user user
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		log.Print(err)
+	}
+
+	if user.FirstName != "" {
+		mockUser.FirstName = user.FirstName
+	}
+	if user.LastName != "" {
+		mockUser.LastName = user.LastName
+	}
+	if !user.DateOfBirth.IsZero() {
+		mockUser.DateOfBirth = user.DateOfBirth
+	}
+	if user.PhoneNumber != "" {
+		mockUser.PhoneNumber = user.PhoneNumber
+	}
+	if user.Gender != "" {
+		mockUser.Gender = user.Gender
+	}
+	if user.Photo != "" {
+		mockUser.Photo = user.Photo
+	}
+	if user.Description != "" {
+		mockUser.Description = user.Description
+	}
+	if user.Preferences != nil {
+		mockUser.Preferences.Smoking = user.Preferences.Smoking
+		mockUser.Preferences.Animals = user.Preferences.Animals
+		mockUser.Preferences.Conversation = user.Preferences.Conversation
+		mockUser.Preferences.Music = user.Preferences.Music
+	}
+	if user.SignUpPhase != nil {
+		mockUser.SignUpPhase = user.SignUpPhase
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write(json)
 }
 
 func main() {
 	r := mux.NewRouter()
-	r.Headers("Content-Type", "application/json")
 	r.HandleFunc("/users/{id}", getUserByIDHandler).
-		Methods("GET")
+		Methods("GET").
+		Headers("Content-Type", "application/json")
+	r.HandleFunc("/users/{id}", updateUserByIDHandler).
+		Methods("PATCH").
+		Headers("Content-Type", "application/json")
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
