@@ -14,6 +14,8 @@ To build and test the service, use the following command in the terminal (Linux 
 
 `go run main.go`
 
+The service will listen for requests on port 8080.
+
 ## Deploy
 TODO: Fill out this section.
 
@@ -22,7 +24,37 @@ TODO: Fill out this section.
 TODO: Fill out this section.
 
 ### GET /users/{id}
-TODO: Fill out this section.
+#### Request
+##### Headers
+```
+Content-Type: application/json
+```
+
+#### Response
+##### Headers
+```
+Content-Type: application/json
+```
+
+##### Body
+```
+{
+    "email": "{email}",
+    "firstName": "{firstName}",
+    "lastName": "{lastName",
+    "dateOfBirth": "{timestamp}",
+    "phoneNumber": "{phoneNumber}",
+    "gender": "{Male|Female}",
+    "photo": "{photoUrl}",
+    "description": "{description}",
+    "preferences": {
+        "smoking": "{0|1|2}",
+        "animals": "{0|1|2}",
+        "conversation": "{0|1|2}",
+        "music": "{0|1|2}"
+    }
+}
+```
 
 ### POST /users
 TODO: Fill out this section.
