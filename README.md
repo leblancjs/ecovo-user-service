@@ -10,9 +10,9 @@
 The user service implements the user REST API. It makes it possible to access a user's details, such as it's profile, as well as create and update a user.
 
 ## To-Do
+* Document how to build with Docker
 * Document how to deploy to Heroku
 * Find out why we get 404s when deployed on Heroku
-* Put this bad boy in a Docker container
 
 ## Build and Test
 To build and test the service, use the following command in the terminal (Linux and macOS) or the command prompt (Windows):
