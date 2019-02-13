@@ -10,14 +10,29 @@
 The user service implements the user REST API. It makes it possible to access a user's details, such as it's profile, as well as create and update a user.
 
 ## To-Do
-* Document how to build with Docker
 * Document how to deploy to Heroku
 * Find out why we get 404s when deployed on Heroku
 
 ## Build and Test
+### Docker
+To build the service in a Docker container, use the following command in the terminal (Linux and macOS):
+
+```
+docker build --tag=user-service
+```
+
+To run the service, use the following command and replace `<PORT>` with the port number to open on the container:
+
+```
+docker run -p <PORT>:8080 user-service
+```
+
+### Manually
 To build and test the service, use the following command in the terminal (Linux and macOS) or the command prompt (Windows):
 
-`go run main.go`
+```
+go run main.go
+```
 
 The service will listen for requests on port 8080.
 
