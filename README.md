@@ -1,8 +1,9 @@
 # User Service
->For the moment, this service is just a mock.
+>For the moment, this service stores users in memory. All data will be lost
+>once it is shutdown.
 >
->Harold will manually reply to each request as
->fast as he can. Please be patient with him!
+>Harold will still manually reply to `GET /users/me` requests as fast as he
+>can, though. Please be patient with him!
 >
 >![](https://hungarytoday.hu/wp-content/uploads/2018/02/18ps27.jpg)
 
@@ -10,6 +11,7 @@
 The user service implements the user REST API. It makes it possible to access a user's details, such as it's profile, as well as create and update a user.
 
 ## To-Do
+* Document errors codes
 * Document how to deploy to Heroku
 * Find out why we get 404s when deployed on Heroku
 
@@ -131,7 +133,6 @@ Content-Type: application/json
 The following example shows all the fields that can be included:
 ```
 {
-    "id": "{id}", // MANDATORY
     "email": "{email}",
     "firstName": "{firstName}",
     "lastName": "{lastName",

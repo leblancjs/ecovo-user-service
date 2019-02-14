@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -16,14 +17,15 @@ const (
 	regularly    = 2
 )
 
-type userPreferences struct {
+type UserPreferences struct {
 	Smoking      int `json:"smoking"`
 	Animals      int `json:"animals"`
 	Conversation int `json:"conversation"`
 	Music        int `json:"music"`
 }
 
-type user struct {
+// TODO: Store Auth0 ID in user
+type User struct {
 	ID          string           `json:"id"`
 	Email       string           `json:"email"`
 	FirstName   string           `json:"firstName"`
@@ -33,17 +35,17 @@ type user struct {
 	Gender      string           `json:"gender"`
 	Photo       string           `json:"photo"`
 	Description string           `json:"description"`
-	Preferences *userPreferences `json:"preferences"`
+	Preferences *UserPreferences `json:"preferences"`
 	SignUpPhase *int             `json:"signUpPhase"`
 }
 
-var mockPrefs = userPreferences{
+var mockPrefs = UserPreferences{
 	Smoking:      regularly,
 	Animals:      never,
 	Conversation: occasionally,
 	Music:        occasionally}
 
-var mockUser = user{
+var mockUser = User{
 	ID:          "12345",
 	Email:       "harold@hide-the-pain.com",
 	FirstName:   "Harold",
@@ -56,8 +58,18 @@ var mockUser = user{
 	Preferences: &mockPrefs,
 	SignUpPhase: nil}
 
+// TODO: Store users in a database
+var usersByID map[string]User
+var nextID int
+
 func getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	// TODO: Get user info from Auth0 with token
+	// ...
+
+	// TODO: Get user based on Auth0 ID
+	// ...
 
 	err := json.NewEncoder(w).Encode(mockUser)
 	if err != nil {
@@ -71,12 +83,20 @@ func getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// TODO: Remove mock response
-	mockUser.ID = id
+	// TODO: Get user from a database
+	user, present := usersByID[id]
+	if !present {
+		log.Printf("No user found with ID \"%s\"", id)
 
-	err := json.NewEncoder(w).Encode(mockUser)
-	if err != nil {
-		log.Print(err)
+		// TODO: Write more informative error message
+		w.WriteHeader(http.StatusNotFound)
+	} else {
+		w.WriteHeader(http.StatusOK)
+
+		err := json.NewEncoder(w).Encode(user)
+		if err != nil {
+			log.Print(err)
+		}
 	}
 }
 
@@ -86,79 +106,108 @@ func updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// TODO: Remove mock response
-	mockUser.ID = id
+	// TODO: Get user from a database
+	user, present := usersByID[id]
+	if !present {
+		log.Printf("No user found with ID \"%s\"", id)
 
-	var user user
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		log.Print(err)
-	}
+		// TODO: Write more informative error message
+		w.WriteHeader(http.StatusNotFound)
+	} else {
+		var modifiedUser User
+		err := json.NewDecoder(r.Body).Decode(&modifiedUser)
+		if err != nil {
+			log.Print(err)
+		}
 
-	if user.FirstName != "" {
-		mockUser.FirstName = user.FirstName
-	}
-	if user.LastName != "" {
-		mockUser.LastName = user.LastName
-	}
-	if !user.DateOfBirth.IsZero() {
-		mockUser.DateOfBirth = user.DateOfBirth
-	}
-	if user.PhoneNumber != "" {
-		mockUser.PhoneNumber = user.PhoneNumber
-	}
-	if user.Gender != "" {
-		mockUser.Gender = user.Gender
-	}
-	if user.Photo != "" {
-		mockUser.Photo = user.Photo
-	}
-	if user.Description != "" {
-		mockUser.Description = user.Description
-	}
-	if user.Preferences != nil {
-		mockUser.Preferences.Smoking = user.Preferences.Smoking
-		mockUser.Preferences.Animals = user.Preferences.Animals
-		mockUser.Preferences.Conversation = user.Preferences.Conversation
-		mockUser.Preferences.Music = user.Preferences.Music
-	}
-	if user.SignUpPhase != nil {
-		mockUser.SignUpPhase = user.SignUpPhase
-	}
+		if modifiedUser.FirstName != "" {
+			user.FirstName = modifiedUser.FirstName
+		}
+		if modifiedUser.LastName != "" {
+			user.LastName = modifiedUser.LastName
+		}
+		if !modifiedUser.DateOfBirth.IsZero() {
+			user.DateOfBirth = modifiedUser.DateOfBirth
+		}
+		if modifiedUser.PhoneNumber != "" {
+			user.PhoneNumber = modifiedUser.PhoneNumber
+		}
+		if modifiedUser.Gender != "" {
+			user.Gender = modifiedUser.Gender
+		}
+		if modifiedUser.Photo != "" {
+			user.Photo = modifiedUser.Photo
+		}
+		if modifiedUser.Description != "" {
+			user.Description = modifiedUser.Description
+		}
+		if modifiedUser.Preferences != nil {
+			user.Preferences.Smoking = modifiedUser.Preferences.Smoking
+			user.Preferences.Animals = modifiedUser.Preferences.Animals
+			user.Preferences.Conversation = modifiedUser.Preferences.Conversation
+			user.Preferences.Music = modifiedUser.Preferences.Music
+		}
+		if modifiedUser.SignUpPhase != nil {
+			*user.SignUpPhase = *modifiedUser.SignUpPhase
+		}
 
-	w.WriteHeader(http.StatusOK)
+		// TODO: Update user in a database
+		// ...
+
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var user user
+	var user User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		log.Print(err)
 	}
 
-	// TODO: Remove mock response
-	if user.Preferences == nil {
-		user.Preferences = &userPreferences{}
-	}
-	user.Preferences.Smoking = occasionally
-	user.Preferences.Animals = occasionally
-	user.Preferences.Conversation = occasionally
-	user.Preferences.Music = occasionally
+	// TODO: Check presence in a database based on Auth0 ID
+	_, present := usersByID[user.ID]
+	if present {
+		log.Printf("User with ID \"%s\" already exists", user.ID)
 
-	user.SignUpPhase = new(int)
-	*user.SignUpPhase = 0
+		// TODO: Write more informative error message
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		// TODO: Store Auth0 ID in user and generate ID through database
+		user.ID = strconv.Itoa(nextID)
+		nextID++
 
-	w.WriteHeader(http.StatusCreated)
+		if user.Preferences == nil {
+			user.Preferences = &UserPreferences{}
+		}
+		user.Preferences.Smoking = occasionally
+		user.Preferences.Animals = occasionally
+		user.Preferences.Conversation = occasionally
+		user.Preferences.Music = occasionally
 
-	err = json.NewEncoder(w).Encode(user)
-	if err != nil {
-		log.Print(err)
+		user.SignUpPhase = new(int)
+		*user.SignUpPhase = 0
+
+		// TODO: Write the user to a database
+		usersByID[user.ID] = user
+
+		log.Printf("Created new user with ID \"%s\"", user.ID)
+
+		w.WriteHeader(http.StatusCreated)
+
+		err = json.NewEncoder(w).Encode(user)
+		if err != nil {
+			log.Print(err)
+		}
 	}
 }
 
 func main() {
+	// TODO: Initialize connection with a database
+	usersByID = make(map[string]User)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
