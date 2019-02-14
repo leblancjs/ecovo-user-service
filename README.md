@@ -41,7 +41,42 @@ TODO: Fill out this section.
 
 ## Endpoints
 ### GET /users/me
-TODO: Fill out this section.
+#### Request
+##### Headers
+```
+Authorization: Bearer {access_token}
+```
+
+#### Response
+##### Status Code(s)
+200 OK upon success
+
+##### Headers
+```
+Content-Type: application/json
+```
+
+##### Body
+```
+{
+    "id": "{id}",
+    "email": "{email}",
+    "firstName": "{firstName}",
+    "lastName": "{lastName",
+    "dateOfBirth": "{timestamp}",
+    "phoneNumber": "{phoneNumber}",
+    "gender": "{Male|Female}",
+    "photo": "{photoUrl}",
+    "description": "{description}",
+    "preferences": {
+        "smoking": "{0|1|2}",
+        "animals": "{0|1|2}",
+        "conversation": "{0|1|2}",
+        "music": "{0|1|2}"
+    },
+    "signUpPhase": "{0|1}"
+}
+```
 
 ### GET /users/{id}
 #### URL Parameters

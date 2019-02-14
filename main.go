@@ -56,6 +56,15 @@ var mockUser = user{
 	Preferences: &mockPrefs,
 	SignUpPhase: nil}
 
+func getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	err := json.NewEncoder(w).Encode(mockUser)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
 func getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -156,6 +165,8 @@ func main() {
 	}
 
 	r := mux.NewRouter()
+	r.HandleFunc("/users/me", getUserFromAuthHandler).
+		Methods("GET")
 	r.HandleFunc("/users/{id}", getUserByIDHandler).
 		Methods("GET").
 		Headers("Content-Type", "application/json")
