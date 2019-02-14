@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -86,8 +87,6 @@ func getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Get user from a database
 	user, present := usersByID[id]
 	if !present {
-		log.Printf("No user found with ID \"%s\"", id)
-
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusNotFound)
 	} else {
@@ -109,8 +108,6 @@ func updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Get user from a database
 	user, present := usersByID[id]
 	if !present {
-		log.Printf("No user found with ID \"%s\"", id)
-
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusNotFound)
 	} else {
@@ -170,8 +167,6 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Check presence in a database based on Auth0 ID
 	_, present := usersByID[user.ID]
 	if present {
-		log.Printf("User with ID \"%s\" already exists", user.ID)
-
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
@@ -192,8 +187,6 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 
 		// TODO: Write the user to a database
 		usersByID[user.ID] = user
-
-		log.Printf("Created new user with ID \"%s\"", user.ID)
 
 		w.WriteHeader(http.StatusCreated)
 
@@ -226,5 +219,5 @@ func main() {
 		Methods("POST").
 		Headers("Content-Type", "application/json")
 
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	log.Fatal(http.ListenAndServe(":"+port, handlers.LoggingHandler(os.Stdout, r)))
 }
