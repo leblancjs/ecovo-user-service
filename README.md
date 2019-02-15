@@ -20,7 +20,7 @@ The user service implements the user REST API. It makes it possible to access a 
 To build the service in a Docker container, use the following command in the terminal (Linux and macOS):
 
 ```
-docker build --tag=user-service
+docker build --tag=user-service .
 ```
 
 To run the service, use the following command and replace `<PORT>` with the port number to open on the container:
