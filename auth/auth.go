@@ -48,10 +48,10 @@ func getUserInfo(auth string) (*UserInfo, error) {
 	return &userInfo, nil
 }
 
-// TokenValidatorMiddleware looks for an access token in the request headers
+// TokenValidationMiddleware looks for an access token in the request headers
 // to validate it and obtain a user's basic information by calling Auth0's
 // Authentication API's /userinfo endpoint.
-func TokenValidatorMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func TokenValidationMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userInfo, err := getUserInfo(r.Header.Get("Authorization"))
 		if err != nil {

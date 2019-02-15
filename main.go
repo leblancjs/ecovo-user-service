@@ -231,15 +231,15 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/users/me", auth.TokenValidatorMiddleware(getUserFromAuthHandler)).
+	r.HandleFunc("/users/me", auth.TokenValidationMiddleware(getUserFromAuthHandler)).
 		Methods("GET")
-	r.HandleFunc("/users/{id}", auth.TokenValidatorMiddleware(getUserByIDHandler)).
+	r.HandleFunc("/users/{id}", auth.TokenValidationMiddleware(getUserByIDHandler)).
 		Methods("GET").
 		Headers("Content-Type", "application/json")
-	r.HandleFunc("/users/{id}", auth.TokenValidatorMiddleware(updateUserByIDHandler)).
+	r.HandleFunc("/users/{id}", auth.TokenValidationMiddleware(updateUserByIDHandler)).
 		Methods("PATCH").
 		Headers("Content-Type", "application/json")
-	r.HandleFunc("/users", auth.TokenValidatorMiddleware(createUserHandler)).
+	r.HandleFunc("/users", auth.TokenValidationMiddleware(createUserHandler)).
 		Methods("POST").
 		Headers("Content-Type", "application/json")
 
