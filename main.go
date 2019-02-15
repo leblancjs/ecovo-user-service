@@ -5,47 +5,48 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
-	"time"
 
 	"azure.com/ecovo/user-service/auth"
+	"azure.com/ecovo/user-service/models"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
-const (
-	never        = 0
-	occasionally = 1
-	regularly    = 2
-)
-
-type UserPreferences struct {
-	Smoking      int `json:"smoking"`
-	Animals      int `json:"animals"`
-	Conversation int `json:"conversation"`
-	Music        int `json:"music"`
+type Env struct {
+	port string
+	repo *models.DB
 }
 
-type User struct {
-	auth0ID     string
-	ID          string           `json:"id"`
-	Email       string           `json:"email"`
-	FirstName   string           `json:"firstName"`
-	LastName    string           `json:"lastName"`
-	DateOfBirth time.Time        `json:"dateOfBirth"`
-	PhoneNumber string           `json:"phoneNumber"`
-	Gender      string           `json:"gender"`
-	Photo       string           `json:"photo"`
-	Description string           `json:"description"`
-	Preferences *UserPreferences `json:"preferences"`
-	SignUpPhase *int             `json:"signUpPhase"`
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	// TODO: Initialize connection with a database
+	db, _ := models.NewDB("")
+
+	env := &Env{
+		port: port,
+		repo: db}
+
+	r := mux.NewRouter()
+	r.HandleFunc("/users/me", auth.TokenValidationMiddleware(env.getUserFromAuthHandler)).
+		Methods("GET")
+	r.HandleFunc("/users/{id}", auth.TokenValidationMiddleware(env.getUserByIDHandler)).
+		Methods("GET").
+		Headers("Content-Type", "application/json")
+	r.HandleFunc("/users/{id}", auth.TokenValidationMiddleware(env.updateUserByIDHandler)).
+		Methods("PATCH").
+		Headers("Content-Type", "application/json")
+	r.HandleFunc("/users", auth.TokenValidationMiddleware(env.createUserHandler)).
+		Methods("POST").
+		Headers("Content-Type", "application/json")
+
+	log.Fatal(http.ListenAndServe(":"+env.port, handlers.LoggingHandler(os.Stdout, r)))
 }
 
-// TODO: Store users in a database
-var usersByID map[string]*User
-var nextID int
-
-func getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
+func (env *Env) getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	userInfo, err := auth.UserInfoFromContext(r.Context())
@@ -53,16 +54,8 @@ func getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		// TODO: Get user from a database
-		var user *User
-		for _, u := range usersByID {
-			if u.auth0ID == userInfo.ID {
-				user = u
-				break
-			}
-		}
-
-		if user == nil {
+		user, err := env.repo.FindByAuth0ID(userInfo.ID)
+		if err != nil {
 			// TODO: Write more informative error message
 			w.WriteHeader(http.StatusNotFound)
 		} else {
@@ -74,15 +67,14 @@ func getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (env *Env) getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// TODO: Get user from a database
-	user, present := usersByID[id]
-	if !present {
+	user, err := env.repo.FindByID(id)
+	if err != nil {
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusNotFound)
 	} else {
@@ -95,19 +87,19 @@ func getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (env *Env) updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	vars := mux.Vars(r)
 	id := vars["id"]
 
 	// TODO: Get user from a database
-	user, present := usersByID[id]
-	if !present {
+	user, err := env.repo.FindByID(id)
+	if err != nil {
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusNotFound)
 	} else {
-		var modifiedUser User
+		var modifiedUser models.User
 		err := json.NewDecoder(r.Body).Decode(&modifiedUser)
 		if err != nil {
 			log.Print(err)
@@ -134,6 +126,7 @@ func updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 		if modifiedUser.Description != "" {
 			user.Description = modifiedUser.Description
 		}
+		// TODO: Fix bug where preferences with null value crush existing values
 		if modifiedUser.Preferences != nil {
 			user.Preferences.Smoking = modifiedUser.Preferences.Smoking
 			user.Preferences.Animals = modifiedUser.Preferences.Animals
@@ -147,14 +140,13 @@ func updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 			*user.SignUpPhase = *modifiedUser.SignUpPhase
 		}
 
-		// TODO: Update user in a database
-		// ...
+		env.repo.Update(user)
 
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func createUserHandler(w http.ResponseWriter, r *http.Request) {
+func (env *Env) createUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	userInfo, err := auth.UserInfoFromContext(r.Context())
@@ -163,18 +155,11 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		// TODO: Check if user exists in a database
-		userAlreadyExists := false
-		for _, u := range usersByID {
-			if u.auth0ID == userInfo.ID {
-				userAlreadyExists = true
-				break
-			}
-		}
-		if userAlreadyExists {
+		user, _ := env.repo.FindByAuth0ID(userInfo.ID)
+		if user != nil {
 			// TODO: Write more informative error message
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			var user User
 			err := json.NewDecoder(r.Body).Decode(&user)
 			if err != nil {
 				log.Print(err)
@@ -182,66 +167,43 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 				// TODO: Write more informative error message
 				w.WriteHeader(http.StatusBadRequest)
 			} else {
-				// TODO: Generate ID through database
-				user.auth0ID = userInfo.ID
-				user.ID = strconv.Itoa(nextID)
-				nextID++
+				user.Auth0ID = userInfo.ID
 
 				// TODO: Validate presence of required fields
 				// ...
 
 				if user.Preferences == nil {
-					user.Preferences = &UserPreferences{}
+					user.Preferences = &models.UserPreferences{}
 				}
-				user.Preferences.Smoking = occasionally
-				user.Preferences.Animals = occasionally
-				user.Preferences.Conversation = occasionally
-				user.Preferences.Music = occasionally
+				user.Preferences.Smoking = models.Occasionally
+				user.Preferences.Animals = models.Occasionally
+				user.Preferences.Conversation = models.Occasionally
+				user.Preferences.Music = models.Occasionally
 
 				user.SignUpPhase = new(int)
 				*user.SignUpPhase = 1
 
 				// TODO: Write the user to a database
-				usersByID[user.ID] = &user
-
-				err = json.NewEncoder(w).Encode(user)
+				user, err = env.repo.Create(user)
 				if err != nil {
 					log.Print(err)
-
-					delete(usersByID, user.ID)
-					nextID--
 
 					// TODO: Write more informative error message
 					w.WriteHeader(http.StatusInternalServerError)
 				} else {
 					w.WriteHeader(http.StatusCreated)
+
+					err = json.NewEncoder(w).Encode(user)
+					if err != nil {
+						log.Print(err)
+
+						env.repo.Delete(user)
+
+						// TODO: Write more informative error message
+						w.WriteHeader(http.StatusInternalServerError)
+					}
 				}
 			}
 		}
 	}
-}
-
-func main() {
-	// TODO: Initialize connection with a database
-	usersByID = make(map[string]*User)
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	r := mux.NewRouter()
-	r.HandleFunc("/users/me", auth.TokenValidationMiddleware(getUserFromAuthHandler)).
-		Methods("GET")
-	r.HandleFunc("/users/{id}", auth.TokenValidationMiddleware(getUserByIDHandler)).
-		Methods("GET").
-		Headers("Content-Type", "application/json")
-	r.HandleFunc("/users/{id}", auth.TokenValidationMiddleware(updateUserByIDHandler)).
-		Methods("PATCH").
-		Headers("Content-Type", "application/json")
-	r.HandleFunc("/users", auth.TokenValidationMiddleware(createUserHandler)).
-		Methods("POST").
-		Headers("Content-Type", "application/json")
-
-	log.Fatal(http.ListenAndServe(":"+port, handlers.LoggingHandler(os.Stdout, r)))
 }
