@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -9,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"azure.com/ecovo/user-service/auth"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -26,10 +26,9 @@ type UserPreferences struct {
 	Music        int `json:"music"`
 }
 
-// TODO: Store Auth0 ID in user
 type User struct {
+	auth0ID     string
 	ID          string           `json:"id"`
-	Auth0ID     string           `json:"auth0Id,omitempty"`
 	Email       string           `json:"email"`
 	FirstName   string           `json:"firstName"`
 	LastName    string           `json:"lastName"`
@@ -42,68 +41,35 @@ type User struct {
 	SignUpPhase *int             `json:"signUpPhase"`
 }
 
-var mockPrefs = UserPreferences{
-	Smoking:      regularly,
-	Animals:      never,
-	Conversation: occasionally,
-	Music:        occasionally}
-
-var mockUser = User{
-	ID:          "12345",
-	Email:       "harold@hide-the-pain.com",
-	FirstName:   "Harold",
-	LastName:    "The Great",
-	DateOfBirth: time.Now(),
-	PhoneNumber: "5141234567",
-	Gender:      "Male",
-	Photo:       "https://hungarytoday.hu/wp-content/uploads/2018/02/18ps27.jpg",
-	Description: "So much pain.",
-	Preferences: &mockPrefs,
-	SignUpPhase: nil}
-
 // TODO: Store users in a database
-var usersByID map[string]User
+var usersByID map[string]*User
 var nextID int
-
-func getUserInfo(auth string) map[string]interface{} {
-	// TODO: Put domain in configuration file
-	req, err := http.NewRequest("GET", "https://ecovo.auth0.com/userinfo", nil)
-	if err != nil {
-		log.Print("failed to create GET /userinfo request")
-		return nil
-	}
-	req.Header.Set("Authorization", auth)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Print("failed to do request")
-		return nil
-	}
-
-	var userInfo map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&userInfo)
-	if err != nil {
-		log.Print("failed to decode user info")
-		return nil
-	}
-	return userInfo
-}
 
 func getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// TODO: Use helper for context key
-	userInfo := r.Context().Value("userInfo")
-	if userInfo == nil {
+	userInfo, err := auth.UserInfoFromContext(r.Context())
+	if err != nil {
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		// TODO: Get user based on Auth0 ID
-		// ...
+		// TODO: Get user from a database
+		var user *User
+		for _, u := range usersByID {
+			if u.auth0ID == userInfo.ID {
+				user = u
+				break
+			}
+		}
 
-		err := json.NewEncoder(w).Encode(mockUser)
-		if err != nil {
-			log.Print(err)
+		if user == nil {
+			// TODO: Write more informative error message
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			err := json.NewEncoder(w).Encode(user)
+			if err != nil {
+				log.Print(err)
+			}
 		}
 	}
 }
@@ -175,6 +141,9 @@ func updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 			user.Preferences.Music = modifiedUser.Preferences.Music
 		}
 		if modifiedUser.SignUpPhase != nil {
+			if user.SignUpPhase == nil {
+				user.SignUpPhase = new(int)
+			}
 			*user.SignUpPhase = *modifiedUser.SignUpPhase
 		}
 
@@ -188,61 +157,73 @@ func updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var user User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	userInfo, err := auth.UserInfoFromContext(r.Context())
 	if err != nil {
-		log.Print(err)
-	}
-
-	// TODO: Check presence in a database based on Auth0 ID
-	_, present := usersByID[user.ID]
-	if present {
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		// TODO: Store Auth0 ID in user and generate ID through database
-		user.ID = strconv.Itoa(nextID)
-		nextID++
-
-		if user.Preferences == nil {
-			user.Preferences = &UserPreferences{}
+		// TODO: Check if user exists in a database
+		userAlreadyExists := false
+		for _, u := range usersByID {
+			if u.auth0ID == userInfo.ID {
+				userAlreadyExists = true
+				break
+			}
 		}
-		user.Preferences.Smoking = occasionally
-		user.Preferences.Animals = occasionally
-		user.Preferences.Conversation = occasionally
-		user.Preferences.Music = occasionally
+		if userAlreadyExists {
+			// TODO: Write more informative error message
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			var user User
+			err := json.NewDecoder(r.Body).Decode(&user)
+			if err != nil {
+				log.Print(err)
 
-		user.SignUpPhase = new(int)
-		*user.SignUpPhase = 0
+				// TODO: Write more informative error message
+				w.WriteHeader(http.StatusBadRequest)
+			} else {
+				// TODO: Generate ID through database
+				user.auth0ID = userInfo.ID
+				user.ID = strconv.Itoa(nextID)
+				nextID++
 
-		// TODO: Write the user to a database
-		usersByID[user.ID] = user
+				// TODO: Validate presence of required fields
+				// ...
 
-		w.WriteHeader(http.StatusCreated)
+				if user.Preferences == nil {
+					user.Preferences = &UserPreferences{}
+				}
+				user.Preferences.Smoking = occasionally
+				user.Preferences.Animals = occasionally
+				user.Preferences.Conversation = occasionally
+				user.Preferences.Music = occasionally
 
-		err = json.NewEncoder(w).Encode(user)
-		if err != nil {
-			log.Print(err)
+				user.SignUpPhase = new(int)
+				*user.SignUpPhase = 0
+
+				// TODO: Write the user to a database
+				usersByID[user.ID] = &user
+
+				err = json.NewEncoder(w).Encode(user)
+				if err != nil {
+					log.Print(err)
+
+					delete(usersByID, user.ID)
+					nextID--
+
+					// TODO: Write more informative error message
+					w.WriteHeader(http.StatusInternalServerError)
+				} else {
+					w.WriteHeader(http.StatusCreated)
+				}
+			}
 		}
 	}
-}
-
-func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userInfo := getUserInfo(r.Header.Get("Authorization"))
-		if userInfo == nil {
-			w.WriteHeader(http.StatusUnauthorized)
-		} else {
-			// TODO: Create helper for context keys
-			ctx := context.WithValue(r.Context(), "userInfo", userInfo)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		}
-	})
 }
 
 func main() {
 	// TODO: Initialize connection with a database
-	usersByID = make(map[string]User)
+	usersByID = make(map[string]*User)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -250,15 +231,15 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/users/me", authMiddleware(getUserFromAuthHandler)).
+	r.HandleFunc("/users/me", auth.TokenValidatorMiddleware(getUserFromAuthHandler)).
 		Methods("GET")
-	r.HandleFunc("/users/{id}", authMiddleware(getUserByIDHandler)).
+	r.HandleFunc("/users/{id}", auth.TokenValidatorMiddleware(getUserByIDHandler)).
 		Methods("GET").
 		Headers("Content-Type", "application/json")
-	r.HandleFunc("/users/{id}", authMiddleware(updateUserByIDHandler)).
+	r.HandleFunc("/users/{id}", auth.TokenValidatorMiddleware(updateUserByIDHandler)).
 		Methods("PATCH").
 		Headers("Content-Type", "application/json")
-	r.HandleFunc("/users", authMiddleware(createUserHandler)).
+	r.HandleFunc("/users", auth.TokenValidatorMiddleware(createUserHandler)).
 		Methods("POST").
 		Headers("Content-Type", "application/json")
 
