@@ -199,7 +199,7 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 				user.Preferences.Music = occasionally
 
 				user.SignUpPhase = new(int)
-				*user.SignUpPhase = 0
+				*user.SignUpPhase = 1
 
 				// TODO: Write the user to a database
 				usersByID[user.ID] = &user
