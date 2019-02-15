@@ -2,8 +2,8 @@
 >For the moment, this service stores users in memory. All data will be lost
 >once it is shutdown.
 >
->Harold will still manually reply to `GET /users/me` requests as fast as he
->can, though. Please be patient with him!
+>Harold has been re-assigned to data entry alone. We'll find him another job
+>once we start using a database. Please be patient with him!
 >
 >![](https://hungarytoday.hu/wp-content/uploads/2018/02/18ps27.jpg)
 
@@ -11,7 +11,7 @@
 The user service implements the user REST API. It makes it possible to access a user's details, such as it's profile, as well as create and update a user.
 
 ## To-Do
-* Document errors codes
+* Document errors codes/responses more cleanly
 * Document how to deploy to Heroku
 * Find out why we get 404s when deployed on Heroku
 
@@ -51,7 +51,9 @@ Authorization: Bearer {access_token}
 
 #### Response
 ##### Status Code(s)
-200 OK upon success
+* 200 OK upon success
+* 401 Not Authorized if no token is present or it is invalid
+* 404 Not Found if no user exists for the given authorization
 
 ##### Headers
 ```
@@ -83,17 +85,20 @@ Content-Type: application/json
 ### GET /users/{id}
 #### URL Parameters
 ##### id
-The user's unique identifier obtained from Auth0 when sign-in/sign-up is completed.
+The user's unique identifier generated when it is created.
 
 #### Request
 ##### Headers
 ```
 Content-Type: application/json
+Authorization: Bearer {access_token}
 ```
 
 #### Response
 ##### Status Code(s)
-200 OK upon success
+* 200 OK upon success
+* 401 Not Authorized if no token is present or it is invalid
+* 404 Not Found if no user exists for the given ID
 
 ##### Headers
 ```
@@ -127,6 +132,7 @@ Content-Type: application/json
 ##### Headers
 ```
 Content-Type: application/json
+Authorization: Bearer {access_token}
 ```
 
 ##### Body
@@ -152,7 +158,10 @@ The following example shows all the fields that can be included:
 
 #### Response
 ##### Status Code
-201 CREATED upon success
+* 201 CREATED upon success
+* 400 Bad Request if the payload is malformated
+* 401 Not Authorized if no token is present or it is invalid
+* 500 Internal Server Error if something else goes wrong
 
 ##### Headers
 ```
@@ -183,12 +192,13 @@ Content-Type: application/json
 ### PATCH /users/{id}
 #### URL Parameters
 ##### id
-The user's unique identifier obtained from Auth0 when sign-in/sign-up is completed.
+The user's unique identifier generated when it is created.
 
 #### Request
 ##### Headers
 ```
 Content-Type: application/json
+Authorization: Bearer {access_token}
 ```
 
 ##### Body
@@ -214,7 +224,10 @@ The following example shows all the fields that can be modified:
 
 #### Response
 ##### Status Code(s)
-200 OK upon success
+* 200 OK upon success
+* 400 Bad Request if the payload is malformated
+* 401 Not Authorized if no token is present or it is invalid
+* 404 Not Found if no user exists for the given ID
 
 ##### Headers
 ```
