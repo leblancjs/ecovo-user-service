@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -28,6 +29,7 @@ type UserPreferences struct {
 // TODO: Store Auth0 ID in user
 type User struct {
 	ID          string           `json:"id"`
+	Auth0ID     string           `json:"auth0Id,omitempty"`
 	Email       string           `json:"email"`
 	FirstName   string           `json:"firstName"`
 	LastName    string           `json:"lastName"`
@@ -63,18 +65,46 @@ var mockUser = User{
 var usersByID map[string]User
 var nextID int
 
+func getUserInfo(auth string) map[string]interface{} {
+	// TODO: Put domain in configuration file
+	req, err := http.NewRequest("GET", "https://ecovo.auth0.com/userinfo", nil)
+	if err != nil {
+		log.Print("failed to create GET /userinfo request")
+		return nil
+	}
+	req.Header.Set("Authorization", auth)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Print("failed to do request")
+		return nil
+	}
+
+	var userInfo map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&userInfo)
+	if err != nil {
+		log.Print("failed to decode user info")
+		return nil
+	}
+	return userInfo
+}
+
 func getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// TODO: Get user info from Auth0 with token
-	// ...
+	// TODO: Use helper for context key
+	userInfo := r.Context().Value("userInfo")
+	if userInfo == nil {
+		// TODO: Write more informative error message
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		// TODO: Get user based on Auth0 ID
+		// ...
 
-	// TODO: Get user based on Auth0 ID
-	// ...
-
-	err := json.NewEncoder(w).Encode(mockUser)
-	if err != nil {
-		log.Print(err)
+		err := json.NewEncoder(w).Encode(mockUser)
+		if err != nil {
+			log.Print(err)
+		}
 	}
 }
 
@@ -197,6 +227,19 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userInfo := getUserInfo(r.Header.Get("Authorization"))
+		if userInfo == nil {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			// TODO: Create helper for context keys
+			ctx := context.WithValue(r.Context(), "userInfo", userInfo)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
+	})
+}
+
 func main() {
 	// TODO: Initialize connection with a database
 	usersByID = make(map[string]User)
@@ -207,15 +250,15 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/users/me", getUserFromAuthHandler).
+	r.HandleFunc("/users/me", authMiddleware(getUserFromAuthHandler)).
 		Methods("GET")
-	r.HandleFunc("/users/{id}", getUserByIDHandler).
+	r.HandleFunc("/users/{id}", authMiddleware(getUserByIDHandler)).
 		Methods("GET").
 		Headers("Content-Type", "application/json")
-	r.HandleFunc("/users/{id}", updateUserByIDHandler).
+	r.HandleFunc("/users/{id}", authMiddleware(updateUserByIDHandler)).
 		Methods("PATCH").
 		Headers("Content-Type", "application/json")
-	r.HandleFunc("/users", createUserHandler).
+	r.HandleFunc("/users", authMiddleware(createUserHandler)).
 		Methods("POST").
 		Headers("Content-Type", "application/json")
 
