@@ -38,10 +38,10 @@ func main() {
 		Headers("Content-Type", "application/json")
 	r.HandleFunc("/users/{id}", auth.TokenValidationMiddleware(env.updateUserByIDHandler)).
 		Methods("PATCH").
-		Headers("Content-Type", "application/json")
+		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
 	r.HandleFunc("/users", auth.TokenValidationMiddleware(env.createUserHandler)).
 		Methods("POST").
-		Headers("Content-Type", "application/json")
+		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
 
 	log.Fatal(http.ListenAndServe(":"+env.port, handlers.LoggingHandler(os.Stdout, r)))
 }
