@@ -29,4 +29,4 @@ FROM scratch
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /bin/${BINARY_NAME} /bin/${BINARY_NAME}
 
-ENTRYPOINT ["/bin/user-service"]
+CMD ["/bin/user-service"]
