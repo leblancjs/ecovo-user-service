@@ -24,9 +24,10 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags '-w -s' -o /bin/${BI
 EXPOSE 8080/tcp
 
 # Start a new container from scratch to keep only the compiled binary
-FROM scratch
+FROM scratch AS run
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /bin/${BINARY_NAME} /bin/${BINARY_NAME}
 
 CMD ["/bin/user-service"]
+ENTRYPOINT ["/bin/user-service"]
