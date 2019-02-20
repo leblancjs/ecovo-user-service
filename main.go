@@ -7,28 +7,38 @@ import (
 	"os"
 
 	"azure.com/ecovo/user-service/auth"
+	"azure.com/ecovo/user-service/db"
 	"azure.com/ecovo/user-service/models"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 type Env struct {
-	port string
-	repo *models.DB
+	port  string
+	store db.Store
 }
 
 func main() {
+	// TODO: Get all this stuff from a configuration file
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	// TODO: Initialize connection with a database
-	db, _ := models.NewDB("")
+	// TODO: Get all this stuff from a configuration file
+	// dbHost := "cluster0-shard-00-00-tgosy.mongodb.net:27017,cluster0-shard-00-01-tgosy.mongodb.net:27017,cluster0-shard-00-02-tgosy.mongodb.net:27017/test"
+	dbHost := "cluster0-shard-00-00-tgosy.mongodb.net:27017,cluster0-shard-00-01-tgosy.mongodb.net:27017,cluster0-shard-00-02-tgosy.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true"
+	dbUsername := "ecovo_rw"
+	dbPassword := "q4GVRkQmPDwOVADz"
+	dbName := "ecovo"
+	db, err := db.NewDB(dbHost, dbUsername, dbPassword, dbName)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	env := &Env{
-		port: port,
-		repo: db}
+		port:  port,
+		store: db}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/users/me", auth.TokenValidationMiddleware(env.getUserFromAuthHandler)).
@@ -54,7 +64,7 @@ func (env *Env) getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		user, err := env.repo.FindByAuth0ID(userInfo.ID)
+		user, err := env.store.FindUserByAuth0ID(userInfo.ID)
 		if err != nil {
 			// TODO: Write more informative error message
 			w.WriteHeader(http.StatusNotFound)
@@ -73,7 +83,7 @@ func (env *Env) getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	user, err := env.repo.FindByID(id)
+	user, err := env.store.FindUserByID(id)
 	if err != nil {
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusNotFound)
@@ -94,7 +104,7 @@ func (env *Env) updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	// TODO: Get user from a database
-	user, err := env.repo.FindByID(id)
+	user, err := env.store.FindUserByID(id)
 	if err != nil {
 		// TODO: Write more informative error message
 		w.WriteHeader(http.StatusNotFound)
@@ -129,7 +139,6 @@ func (env *Env) updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 		// TODO: Fix bug where preferences with null value crush existing values
 		if modifiedUser.Preferences != nil {
 			user.Preferences.Smoking = modifiedUser.Preferences.Smoking
-			user.Preferences.Animals = modifiedUser.Preferences.Animals
 			user.Preferences.Conversation = modifiedUser.Preferences.Conversation
 			user.Preferences.Music = modifiedUser.Preferences.Music
 		}
@@ -140,7 +149,7 @@ func (env *Env) updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 			*user.SignUpPhase = *modifiedUser.SignUpPhase
 		}
 
-		env.repo.Update(user)
+		env.store.UpdateUser(user)
 
 		w.WriteHeader(http.StatusOK)
 	}
@@ -155,7 +164,7 @@ func (env *Env) createUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		// TODO: Check if user exists in a database
-		user, _ := env.repo.FindByAuth0ID(userInfo.ID)
+		user, _ := env.store.FindUserByAuth0ID(userInfo.ID)
 		if user != nil {
 			// TODO: Write more informative error message
 			w.WriteHeader(http.StatusInternalServerError)
@@ -176,7 +185,6 @@ func (env *Env) createUserHandler(w http.ResponseWriter, r *http.Request) {
 					user.Preferences = &models.UserPreferences{}
 				}
 				user.Preferences.Smoking = models.Occasionally
-				user.Preferences.Animals = models.Occasionally
 				user.Preferences.Conversation = models.Occasionally
 				user.Preferences.Music = models.Occasionally
 
@@ -184,23 +192,26 @@ func (env *Env) createUserHandler(w http.ResponseWriter, r *http.Request) {
 				*user.SignUpPhase = 1
 
 				// TODO: Write the user to a database
-				user, err = env.repo.Create(user)
+				user, err = env.store.CreateUser(user)
 				if err != nil {
 					log.Print(err)
 
 					// TODO: Write more informative error message
 					w.WriteHeader(http.StatusInternalServerError)
 				} else {
-					w.WriteHeader(http.StatusCreated)
-
 					err = json.NewEncoder(w).Encode(user)
 					if err != nil {
 						log.Print(err)
 
-						env.repo.Delete(user)
+						err = env.store.DeleteUser(user)
+						if err != nil {
+							log.Print(err)
+						}
 
 						// TODO: Write more informative error message
 						w.WriteHeader(http.StatusInternalServerError)
+					} else {
+						w.WriteHeader(http.StatusCreated)
 					}
 				}
 			}

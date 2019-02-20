@@ -1,19 +1,16 @@
 # User Service
->For the moment, this service stores users in memory. All data will be lost
->once it is shutdown.
->
->Harold has been re-assigned to data entry alone. We'll find him another job
->once we start using a database. Please be patient with him!
->
->![](https://hungarytoday.hu/wp-content/uploads/2018/02/18ps27.jpg)
-
 ## Introduction
 The user service implements the user REST API. It makes it possible to access a user's details, such as it's profile, as well as create and update a user.
 
 ## To-Do
 * Document errors codes/responses more cleanly
+* Refactor the db/store code to make improve its structure
+* Refactor handlers to reduce the amount of business logic they have
+* Add validation to the user struct
+* Refactor Auth to make it configurable via environment variables (or config file)
+* Refactor main to make DB configuratble via environment variables (or config file)
+* Fix bug when deploying to Heroku
 * Document how to deploy to Heroku
-* Find out why we get 404s when deployed on Heroku
 
 ## Build and Test
 ### Docker
@@ -74,7 +71,6 @@ Content-Type: application/json
     "description": "{description}",
     "preferences": {
         "smoking": "{0|1|2}",
-        "animals": "{0|1|2}",
         "conversation": "{0|1|2}",
         "music": "{0|1|2}"
     },
@@ -119,7 +115,6 @@ Content-Type: application/json
     "description": "{description}",
     "preferences": {
         "smoking": "{0|1|2}",
-        "animals": "{0|1|2}",
         "conversation": "{0|1|2}",
         "music": "{0|1|2}"
     },
@@ -149,7 +144,6 @@ The following example shows all the fields that can be included:
     "description": "{description}",
     "preferences": {
         "smoking": "{0|1|2}",
-        "animals": "{0|1|2}",
         "conversation": "{0|1|2}",
         "music": "{0|1|2}"
     }
@@ -181,7 +175,6 @@ Content-Type: application/json
     "description": "{description}",
     "preferences": {
         "smoking": {0|1|2},
-        "animals": {0|1|2},
         "conversation": {0|1|2},
         "music": {0|1|2}
     },
@@ -214,7 +207,6 @@ The following example shows all the fields that can be modified:
     "description": "{description}",
     "preferences": {
         "smoking": {0|1|2},
-        "animals": {0|1|2},
         "conversation": {0|1|2},
         "music": {0|1|2}
     },
