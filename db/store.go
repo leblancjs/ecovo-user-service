@@ -12,9 +12,9 @@ import (
 type Store interface {
 	FindUserByID(ID string) (*models.User, error)
 	FindUserByAuth0ID(ID string) (*models.User, error)
-	CreateUser(u *models.User) (*models.User, error)
-	UpdateUser(u *models.User) error
-	DeleteUser(u *models.User) error
+	CreateUser(user *models.User) (*models.User, error)
+	UpdateUser(user *models.User) error
+	DeleteUser(user *models.User) error
 }
 
 var nextID int
@@ -54,8 +54,8 @@ func (db *DB) FindUserByAuth0ID(ID string) (*models.User, error) {
 
 // CreateUser creates a user in the database, populates the given user's ID
 // field and returns a reference to it.
-func (db *DB) CreateUser(u *models.User) (*models.User, error) {
-	res, err := db.users.InsertOne(context.TODO(), u)
+func (db *DB) CreateUser(user *models.User) (*models.User, error) {
+	res, err := db.users.InsertOne(context.TODO(), user)
 	if err != nil {
 		// TODO: Return more informative error message
 		return nil, err
@@ -67,17 +67,17 @@ func (db *DB) CreateUser(u *models.User) (*models.User, error) {
 		return nil, err
 	}
 
-	u.ID = ID
+	user.ID = ID
 
-	return u, nil
+	return user, nil
 }
 
 // UpdateUser updates a user in the database based on the non-zero fields of
 // the given user.
-func (db *DB) UpdateUser(u *models.User) error {
-	filter := bson.D{{"_id", u.ID}}
+func (db *DB) UpdateUser(user *models.User) error {
+	filter := bson.D{{"_id", user.ID}}
 	update := bson.D{
-		bson.E{"$set", u}}
+		bson.E{"$set", user}}
 	res, err := db.users.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		// TODO: Return more informative error message
@@ -98,8 +98,8 @@ func (db *DB) UpdateUser(u *models.User) error {
 }
 
 // DeleteUser removes a user from the database.
-func (db *DB) DeleteUser(u *models.User) error {
-	filter := bson.D{{"_id", u.ID}}
+func (db *DB) DeleteUser(user *models.User) error {
+	filter := bson.D{{"_id", user.ID}}
 	res, err := db.users.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		// TODO: Return more informative error message

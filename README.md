@@ -4,7 +4,6 @@ The user service implements the user REST API. It makes it possible to access a 
 
 ## To-Do
 * Document errors codes/responses more cleanly
-* Refactor the db/store code to make improve its structure
 * Refactor handlers to reduce the amount of business logic they have
 * Add validation to the user struct
 * Refactor Auth to make it configurable via environment variables (or config file)
