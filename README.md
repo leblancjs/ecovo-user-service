@@ -8,7 +8,6 @@ The user service implements the user REST API. It makes it possible to access a 
 * Add validation to the user struct
 * Refactor Auth to make it configurable via environment variables (or config file)
 * Refactor main to make DB configuratble via environment variables (or config file)
-* Document how to deploy to Heroku
 
 ## Build and Test
 ### Docker
@@ -34,7 +33,31 @@ go run main.go
 The service will listen for requests on port 8080.
 
 ## Deploy
-TODO: Fill out this section.
+### Heroku
+Before we begin, make sure that the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install) is installed on your machine.
+
+#### Step 1 - Login
+To log in to Heroku, enter the following command using the Ecovo account credentials which can be found on Google Drive:
+
+```
+heroku login
+```
+
+It should open a browser in which you can log in
+
+#### Step 2 - Build and Push the Container
+To build and push the container to the Heroku container registry, use the following command:
+
+```
+heroku container:push web
+```
+
+#### Step 3 - Release the Container
+To release the container that was pushed in the previous step, use the following command:
+
+```
+heroku container:release web
+```
 
 ## Endpoints
 ### GET /users/me
