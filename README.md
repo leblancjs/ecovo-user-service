@@ -6,51 +6,100 @@ The user service implements the user REST API. It makes it possible to access a 
 * Document errors codes/responses more cleanly
 * Refactor handlers to reduce the amount of business logic they have
 * Add validation to the user struct
+* Add table of contents to README
+
+## Configuration
+The application's database connection and Auth0 domain are configured using environment variables. To avoid having to define them every time the service is run, they are kept in the `.env` file at the root of the repository.
+
+The table below enumerates the different environment variables.
+
+|Name|Required|Description|
+|---|---|---|
+|AUTH_DOMAIN|Yes|Domain where the user info endpoint is hosted (ex. my.domain.com)|
+|DB_HOST|Yes|URI to where the database is hosted|
+|DB_USERNAME|Yes|Username to use to to establish the database connection|
+|DB_PASSWORD|Yes|Password to use to establish the database connection|
+|DB_NAME|Yes|Name of the database to use on the server|
+|DB_CONNECTION_TIMEOUT|No|Time to wait before giving up on connecting to the database|
 
 ## Build and Test
-### Docker
-To build the service in a Docker container, use the following command in the terminal (Linux and macOS):
+### Prerequisites
+#### Docker
+Docker is used to simplify the build and test processes. It makes it possible
+to build and run the application without needing to install Go, and also makes it much easier to define environment variables to use to configure the service (see the next section).
+
+Please download and install [Docker Desktop](https://www.docker.com/products/docker-desktop), and make sure that it is running on your machine before you proceed.
+
+### Step 1 - Build an Image
+In order to run the application locally to test it, we need to build an image
+using Docker.
+
+To do so, run following command in a terminal:
 
 ```
 docker build --tag=user-service .
 ```
 
-To run the service, use the following command and replace `<PORT>` with the port number to open on the container:
+You will need to rebuild the image every time a change is made in the code, or when new changes are pulled.
+
+Don't worry, it doesn't take that long.
+
+### Step 2 - Run the Image in a Container
+To run the service, we need to run the image we built in the previous step in a
+container using Docker.
+
+To do so, run the following command in a terminal and replace `<PORT>` with the port you want to use to access the API:
 
 ```
-docker run -p <PORT>:8080 user-service
+docker run -it -p <PORT>:8080 --env-file .env user-service
 ```
 
-### Manually
-To build and test the service, use the following command in the terminal (Linux and macOS) or the command prompt (Windows):
-
-```
-go run main.go
-```
-
-The service will listen for requests on port 8080.
+It is important to note that the `--env-file` argument is used to tell Docker
+to define the environment variables found in the `.env` file in the Docker
+container. Otherwise, the service will not start.
 
 ## Deploy
-### Heroku
-Before we begin, make sure that the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install) is installed on your machine.
+The service can be deployed to [Heroku](https://heroku.com) by pushing a Docker
+image to its container registry, and releasing it in a Heroku application.
 
-#### Step 1 - Login
-To log in to Heroku, enter the following command using the Ecovo account credentials which can be found on Google Drive:
+### Prerequisites
+The same prerequisites defined in the Build and Test section apply here.
+
+#### Heroku CLI
+The [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install)
+is used to deploy the application to Heroku. Please download and install it on your machine.
+
+##### Login
+To log in to Heroku, enter the following command in a terminal:
 
 ```
 heroku login
 ```
 
-It should open a browser in which you can log in
+It should open a web browser in which you can log in using the Ecovo account credentials, which can be found on Google Drive.
 
-#### Step 2 - Build and Push the Container
-To build and push the container to the Heroku container registry, use the following command:
+This step only needs to be done once, after you've installed the Heroku CLI.
+
+##### Link the Git Repository to the Heroku Application
+To make sure that we deploy the service to the right application on Heroku, we
+need to link the Git repository to the application.
+
+To do so, run the following command in a terminal:
+
+```
+heroku create ecovo-user-service
+```
+
+This step only needs to be done once, after you've cloned the Git repository.
+
+#### Step 1 - Push the Image to the Container Registry
+To build and push the image to the Heroku container registry, use the following command:
 
 ```
 heroku container:push web
 ```
 
-#### Step 3 - Release the Container
+#### Step 2 - Release the Container
 To release the container that was pushed in the previous step, use the following command:
 
 ```
