@@ -62,6 +62,11 @@ container. Otherwise, the service will not start.
 The service can be deployed to [Heroku](https://heroku.com) by pushing a Docker
 image to its container registry, and releasing it in a Heroku application.
 
+### Environment Variables
+It is important to note that the service still needs those environment
+variables! On Heroku, they need to be defined in the dashboard as Config Vars.
+Without them, the service will fail to start.
+
 ### Prerequisites
 The same prerequisites defined in the Build and Test section apply here.
 
