@@ -11,7 +11,7 @@ import (
 
 // Config contains the information required to connect to a database.
 type Config struct {
-	// Host specifies the URI where the database is hosted.
+	// Host specifies the URI to where the database is hosted.
 	Host string
 	// Username specifies the name of the database user to use when
 	// establishing the connection to the database server.
@@ -21,7 +21,7 @@ type Config struct {
 	Password string
 	// Name specifies the name of the database to use on the server.
 	Name string
-	// ConnectionTimeout specifies how long to wait before giving up on
+	// ConnectionTimeout specifies how many seconds to wait before giving up on
 	// connecting to the database server.
 	//
 	// A timeout of zero means no timeout.

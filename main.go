@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"azure.com/ecovo/user-service/auth"
 	"azure.com/ecovo/user-service/db"
@@ -31,12 +32,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	dbConnectionTimeout, err := time.ParseDuration(os.Getenv("DB_CONNECTION_TIMEOUT") + "s")
+	if err != nil {
+		log.Printf("hehehe")
+		dbConnectionTimeout = db.DefaultConnectionTimeout
+	}
 	dbConfig := db.Config{
 		Host:              os.Getenv("DB_HOST"),
 		Username:          os.Getenv("DB_USERNAME"),
 		Password:          os.Getenv("DB_PASSWORD"),
 		Name:              os.Getenv("DB_NAME"),
-		ConnectionTimeout: db.DefaultConnectionTimeout}
+		ConnectionTimeout: dbConnectionTimeout}
 	db, err := db.NewDB(&dbConfig)
 	if err != nil {
 		log.Fatal(err)
