@@ -8,7 +8,6 @@ The user service implements the user REST API. It makes it possible to access a 
 * Add validation to the user struct
 * Refactor Auth to make it configurable via environment variables (or config file)
 * Refactor main to make DB configuratble via environment variables (or config file)
-* Fix bug when deploying to Heroku
 * Document how to deploy to Heroku
 
 ## Build and Test
