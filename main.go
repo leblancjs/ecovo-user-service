@@ -34,7 +34,6 @@ func main() {
 
 	dbConnectionTimeout, err := time.ParseDuration(os.Getenv("DB_CONNECTION_TIMEOUT") + "s")
 	if err != nil {
-		log.Printf("hehehe")
 		dbConnectionTimeout = db.DefaultConnectionTimeout
 	}
 	dbConfig := db.Config{
