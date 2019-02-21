@@ -4,53 +4,107 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
-// DB represents a database session.
+// Config contains the information required to connect to a database.
+type Config struct {
+	// Host specifies the URI where the database is hosted.
+	Host string
+	// Username specifies the name of the database user to use when
+	// establishing the connection to the database server.
+	Username string
+	// Password specifies the password of the database user used to establish
+	// the connection to the database server.
+	Password string
+	// Name specifies the name of the database to use on the server.
+	Name string
+	// ConnectionTimeout specifies how long to wait before giving up on
+	// connecting to the database server.
+	//
+	// A timeout of zero means no timeout.
+	ConnectionTimeout time.Duration
+}
+
+// DefaultConnectionTimeout represents the default amount of time to wait while
+// establishing a connection to the database server.
+const DefaultConnectionTimeout = 20 * time.Second
+
+// Validate looks at the configuratin's contents to ensure it has all the
+// required fields.
+func (conf *Config) validate() error {
+	if conf.Host == "" {
+		return errors.New("missing host")
+	}
+
+	if conf.Username == "" {
+		return errors.New("missing username")
+	}
+
+	if conf.Password == "" {
+		return errors.New("missing password")
+	}
+
+	if conf.Name == "" {
+		return errors.New("missing name")
+	}
+
+	return nil
+}
+
+// DB represents a database. It contains a client used to connect to a database
+// server and the database's collections.
 type DB struct {
 	client *mongo.Client
 	users  *mongo.Collection
 }
 
-// const connectionString = "mongodb+srv://ecovo_admin:<PASSWORD>@cluster0-tgosy.mongodb.net/test?retryWrites=true"
+const (
+	userCollectionName = "users"
+)
 
-// UserCollectionName represents the name of the collection in the database
-// that contains the user records.
-const UserCollectionName = "users"
-
-// NewDB establishes a connection to a database server and returns the database
-// with the given name.
-func NewDB(host string, username string, password string, name string) (*DB, error) {
-	url := fmt.Sprintf("mongodb://%s:%s@%s", username, password, host)
-
-	client, err := mongo.NewClient(url)
-	if err != nil {
-		return nil, err
+// NewDB creates a database by establishing a connection to the database server
+// specified in the given configuration.
+func NewDB(conf *Config) (*DB, error) {
+	if conf == nil {
+		return nil, errors.New("db: missing configuration")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	err := conf.validate()
+	if err != nil {
+		return nil, fmt.Errorf("db: configuration %s", err)
+	}
+
+	url := fmt.Sprintf("mongodb://%s:%s@%s", conf.Username, conf.Password, conf.Host)
+	client, err := mongo.NewClient(url)
+	if err != nil {
+		return nil, fmt.Errorf("db: failed to create client (%s)", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), conf.ConnectionTimeout)
 	defer cancel()
 
 	err = client.Connect(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db: failed to connect to server (%s)", err)
 	}
 
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("db: %s", err)
 	}
 
-	db := client.Database(name)
+	db := client.Database(conf.Name)
 	if db == nil {
-		return nil, errors.New("could not find database with name \"" + name + "\"")
+		return nil, fmt.Errorf("db: no database found with name \"%s\"", conf.Name)
 	}
 
-	users := db.Collection("users")
+	users := db.Collection(userCollectionName)
+	if users == nil {
+		return nil, fmt.Errorf("db: no collection found with name \"%s\" in database", userCollectionName)
+	}
 
 	return &DB{client, users}, nil
 }

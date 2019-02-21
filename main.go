@@ -19,19 +19,25 @@ type Env struct {
 }
 
 func main() {
-	// TODO: Get all this stuff from a configuration file
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	// TODO: Get all this stuff from a configuration file
-	// dbHost := "cluster0-shard-00-00-tgosy.mongodb.net:27017,cluster0-shard-00-01-tgosy.mongodb.net:27017,cluster0-shard-00-02-tgosy.mongodb.net:27017/test"
-	dbHost := "cluster0-shard-00-00-tgosy.mongodb.net:27017,cluster0-shard-00-01-tgosy.mongodb.net:27017,cluster0-shard-00-02-tgosy.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true"
-	dbUsername := "ecovo_rw"
-	dbPassword := "q4GVRkQmPDwOVADz"
-	dbName := "ecovo"
-	db, err := db.NewDB(dbHost, dbUsername, dbPassword, dbName)
+	authConfig := auth.Config{
+		Domain: os.Getenv("AUTH_DOMAIN")}
+	authValidator, err := auth.NewTokenValidator(&authConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbConfig := db.Config{
+		Host:              os.Getenv("DB_HOST"),
+		Username:          os.Getenv("DB_USERNAME"),
+		Password:          os.Getenv("DB_PASSWORD"),
+		Name:              os.Getenv("DB_NAME"),
+		ConnectionTimeout: db.DefaultConnectionTimeout}
+	db, err := db.NewDB(&dbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,15 +47,15 @@ func main() {
 		store: db}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/users/me", auth.TokenValidationMiddleware(env.getUserFromAuthHandler)).
+	r.HandleFunc("/users/me", auth.ValidationMiddleware(authValidator, env.getUserFromAuthHandler)).
 		Methods("GET")
-	r.HandleFunc("/users/{id}", auth.TokenValidationMiddleware(env.getUserByIDHandler)).
+	r.HandleFunc("/users/{id}", auth.ValidationMiddleware(authValidator, env.getUserByIDHandler)).
 		Methods("GET").
 		Headers("Content-Type", "application/json")
-	r.HandleFunc("/users/{id}", auth.TokenValidationMiddleware(env.updateUserByIDHandler)).
+	r.HandleFunc("/users/{id}", auth.ValidationMiddleware(authValidator, env.updateUserByIDHandler)).
 		Methods("PATCH").
 		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
-	r.HandleFunc("/users", auth.TokenValidationMiddleware(env.createUserHandler)).
+	r.HandleFunc("/users", auth.ValidationMiddleware(authValidator, env.createUserHandler)).
 		Methods("POST").
 		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
 

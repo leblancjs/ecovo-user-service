@@ -6,8 +6,6 @@ The user service implements the user REST API. It makes it possible to access a 
 * Document errors codes/responses more cleanly
 * Refactor handlers to reduce the amount of business logic they have
 * Add validation to the user struct
-* Refactor Auth to make it configurable via environment variables (or config file)
-* Refactor main to make DB configuratble via environment variables (or config file)
 
 ## Build and Test
 ### Docker
