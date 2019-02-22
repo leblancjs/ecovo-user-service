@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"azure.com/ecovo/user-service/requestid"
+	"azure.com/ecovo/user-service/pkg/requestid"
 )
 
 type HTTPError struct {

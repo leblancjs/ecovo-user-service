@@ -1,7 +1,6 @@
 module azure.com/ecovo/user-service
 
 require (
-	github.com/ascarter/requestid v0.0.0-20170313220838-5b76ab3d4aee // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/google/uuid v1.1.0 // indirect

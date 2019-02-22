@@ -12,7 +12,7 @@ ENV GO111MODULE=on
 
 # Copy the project files
 COPY . $GOPATH/src/${PROJECT_NAME}
-WORKDIR $GOPATH/src/${PROJECT_NAME}
+WORKDIR $GOPATH/src/${PROJECT_NAME}/cmd
 
 # Manage dependencies
 RUN go mod download

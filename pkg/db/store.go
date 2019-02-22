@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"azure.com/ecovo/user-service/models"
+	"azure.com/ecovo/user-service/pkg/models"
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 )

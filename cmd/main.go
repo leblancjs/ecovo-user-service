@@ -8,11 +8,11 @@ import (
 	"os"
 	"time"
 
-	"azure.com/ecovo/user-service/auth"
-	"azure.com/ecovo/user-service/db"
-	"azure.com/ecovo/user-service/httperror"
-	"azure.com/ecovo/user-service/models"
-	"azure.com/ecovo/user-service/requestid"
+	"azure.com/ecovo/user-service/pkg/auth"
+	"azure.com/ecovo/user-service/pkg/db"
+	"azure.com/ecovo/user-service/pkg/httperror"
+	"azure.com/ecovo/user-service/pkg/models"
+	"azure.com/ecovo/user-service/pkg/requestid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
