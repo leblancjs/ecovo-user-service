@@ -1,8 +1,8 @@
 package models
 
 import (
-	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
@@ -19,6 +19,19 @@ const (
 	// Regularly represents that a user regularly smokes, listens to music or
 	// talks.
 	Regularly = 2
+)
+
+const (
+	// SignUpPhasePersonalInfo means that the user is at the first sign up
+	// phase where it needs to enter its personal information.
+	SignUpPhasePersonalInfo string = "personalInfo"
+
+	// SignUpPhasePreferences means that the user is at the second sign up
+	// phase where it needs to enter its preferences.
+	SignUpPhasePreferences string = "preferences"
+
+	// SignUpPhaseDone means that the user has completed all sign up phases.
+	SignUpPhaseDone string = "done"
 )
 
 // UserPreferences contains a user's preferences when it comes to smoking,
@@ -58,42 +71,42 @@ type User struct {
 	Photo       string             `json:"photo" bson:"photo"`
 	Description string             `json:"description" bson:"description"`
 	Preferences *UserPreferences   `json:"preferences" bson:"preferences"`
-	SignUpPhase *int               `json:"signUpPhase" bson:"signUpPhase"`
+	SignUpPhase string             `json:"signUpPhase" bson:"signUpPhase"`
 }
 
 // Validate looks at the user's contents to ensure it has all the required
 // fields.
 func (user *User) Validate() error {
 	if user.Auth0ID == "" {
-		return errors.New("missing Auth0ID")
+		return fmt.Errorf("missing Auth0ID")
 	}
 
 	if user.Email == "" {
-		return errors.New("missing email")
+		return fmt.Errorf("missing email")
 	}
 
 	if user.FirstName == "" {
-		return errors.New("missing first name")
+		return fmt.Errorf("missing first name")
 	}
 
 	if user.LastName == "" {
-		return errors.New("missing last name")
+		return fmt.Errorf("missing last name")
 	}
 
 	if user.DateOfBirth.IsZero() {
-		return errors.New("missing date of birth")
+		return fmt.Errorf("missing date of birth")
 	}
 
 	if user.PhoneNumber == "" {
-		return errors.New("missing phone number")
+		return fmt.Errorf("missing phone number")
 	}
 
 	if user.Gender == "" {
-		return errors.New("missing gender")
+		return fmt.Errorf("missing gender")
 	}
 
 	if user.Preferences == nil {
-		return errors.New("missing preferences")
+		return fmt.Errorf("missing preferences")
 	}
 
 	err := user.Preferences.validate()
@@ -101,8 +114,12 @@ func (user *User) Validate() error {
 		return err
 	}
 
-	if user.SignUpPhase == nil {
-		return errors.New("missing sign up phase")
+	if user.SignUpPhase == "" {
+		return fmt.Errorf("missing sign up phase")
+	}
+
+	if strings.Compare(user.SignUpPhase, SignUpPhasePersonalInfo) != 0 && strings.Compare(user.SignUpPhase, SignUpPhasePreferences) != 0 && strings.Compare(user.SignUpPhase, SignUpPhaseDone) != 0 {
+		return fmt.Errorf("invalid signup phase \"%s\"", user.SignUpPhase)
 	}
 
 	return nil

@@ -144,6 +144,21 @@ Content-Type: application/json
 ```
 
 ##### Body
+If no user profile exists for the authenticated user, its user information
+is returned, along with the sign up phase set appropriately to the first phase.
+
+```
+{
+    "email": "{email}",
+    "firstName": "{firstName}",
+    "lastName": "{lastName",
+    "photo": "{photoUrl}",
+    "signUpPhase": "personalInfo"
+}
+```
+
+Otherwise, the usual `GET /users/{id}` response will be returned.
+
 ```
 {
     "id": "{id}",
@@ -160,12 +175,11 @@ Content-Type: application/json
         "conversation": "{0|1|2}",
         "music": "{0|1|2}"
     },
-    "signUpPhase": "{0|1}"
+    "signUpPhase": "{personalInfo|preferences|done}"
 }
 ```
 
 ##### Possible Errors
-* 404 Not Found
 * 500 Internal Server Error
 
 ### GET /users/{id}
@@ -206,7 +220,7 @@ Content-Type: application/json
         "conversation": "{0|1|2}",
         "music": "{0|1|2}"
     },
-    "signUpPhase": "{0|1}"
+    "signUpPhase": "{personalInfo|preferences|done}"
 }
 ```
 
@@ -267,7 +281,7 @@ Content-Type: application/json
         "conversation": {0|1|2},
         "music": {0|1|2}
     },
-    "signUpPhase": {0|1}
+    "signUpPhase": "{personalInfo|preferences|done}"
 }
 ```
 
@@ -303,7 +317,7 @@ The following example shows all the fields that can be modified:
         "conversation": {0|1|2},
         "music": {0|1|2}
     },
-    "signUpPhase": {0|1}
+    "signUpPhase": "{personalInfo|preferences|done}"
 }
 ```
 

@@ -13,14 +13,18 @@ import (
 type Config struct {
 	// Host specifies the URI to where the database is hosted.
 	Host string
+
 	// Username specifies the name of the database user to use when
 	// establishing the connection to the database server.
 	Username string
+
 	// Password specifies the password of the database user used to establish
 	// the connection to the database server.
 	Password string
+
 	// Name specifies the name of the database to use on the server.
 	Name string
+
 	// ConnectionTimeout specifies how many seconds to wait before giving up on
 	// connecting to the database server.
 	//

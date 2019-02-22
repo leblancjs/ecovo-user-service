@@ -78,17 +78,32 @@ func (env *Env) getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
 		httperror.Handler(w, r,
 			httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
 	} else {
-		user, err := env.store.FindUserByAuth0ID(userInfo.ID)
-		if err != nil {
-			httperror.Handler(w, r,
-				httperror.NewNotFoundError(httperror.ErrUserNotFound, err))
+		user, _ := env.store.FindUserByAuth0ID(userInfo.ID)
+		if user == nil {
+			type tmpUser struct {
+				Email       string `json:"email"`
+				FirstName   string `json:"firstName"`
+				LastName    string `json:"lastName"`
+				Photo       string `json:"photo"`
+				SignUpPhase string `json:"signUpPhase"`
+			}
+
+			err := json.NewEncoder(w).Encode(&tmpUser{
+				Email:       userInfo.Email,
+				FirstName:   userInfo.FirstName,
+				LastName:    userInfo.LastName,
+				Photo:       userInfo.Picture,
+				SignUpPhase: models.SignUpPhasePersonalInfo,
+			})
+			if err != nil {
+				httperror.Handler(w, r,
+					httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
+			}
 		} else {
 			err := json.NewEncoder(w).Encode(user)
 			if err != nil {
 				httperror.Handler(w, r,
 					httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
-			} else {
-				w.WriteHeader(http.StatusOK)
 			}
 		}
 	}
@@ -166,19 +181,22 @@ func (env *Env) updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 				user.Preferences.Music = modifiedUser.Preferences.Music
 			}
 
-			if modifiedUser.SignUpPhase != nil {
-				if user.SignUpPhase == nil {
-					user.SignUpPhase = new(int)
-				}
-				*user.SignUpPhase = *modifiedUser.SignUpPhase
+			if modifiedUser.SignUpPhase != "" {
+				user.SignUpPhase = modifiedUser.SignUpPhase
 			}
 
-			err := env.store.UpdateUser(user)
+			err = user.Validate()
 			if err != nil {
 				httperror.Handler(w, r,
-					httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
+					httperror.NewBadRequestError(err.Error(), err))
 			} else {
-				w.WriteHeader(http.StatusOK)
+				err := env.store.UpdateUser(user)
+				if err != nil {
+					httperror.Handler(w, r,
+						httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
+				} else {
+					w.WriteHeader(http.StatusOK)
+				}
 			}
 		}
 	}
@@ -211,13 +229,12 @@ func (env *Env) createUserHandler(w http.ResponseWriter, r *http.Request) {
 				user.Preferences.Conversation = models.Occasionally
 				user.Preferences.Music = models.Occasionally
 
-				user.SignUpPhase = new(int)
-				*user.SignUpPhase = 1
+				user.SignUpPhase = models.SignUpPhasePreferences
 
 				err = user.Validate()
 				if err != nil {
 					httperror.Handler(w, r,
-						httperror.NewBadRequestError("Malformed request body: "+err.Error(), err))
+						httperror.NewBadRequestError(err.Error(), err))
 				} else {
 					user, err = env.store.CreateUser(user)
 					if err != nil {
