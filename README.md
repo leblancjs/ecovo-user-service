@@ -1,4 +1,13 @@
 # User Service
+## Table of Contents
+* [Introduction](#introduction)
+* [To-Do](#to-do)
+* [Configuration](#configuration)
+* [Build and Test](#build-and-test)
+* [Deploy](#deploy)
+* [Endpoints](#endpoints)
+* [Errors](#errors)
+
 ## Introduction
 The user service implements the user REST API. It makes it possible to access a user's details, such as it's profile, as well as create and update a user.
 
@@ -6,7 +15,6 @@ The user service implements the user REST API. It makes it possible to access a 
 * Refactor handlers to reduce the amount of business logic they have
 * (includes previous point) Refactor to "clean architecture" :)
 * Write some automated tests!!! Postman is tedious to use
-* Add table of contents to README
 
 ## Configuration
 The application's database connection and Auth0 domain are configured using environment variables. To avoid having to define them every time the service is run, they are kept in the `.env` file at the root of the repository.
