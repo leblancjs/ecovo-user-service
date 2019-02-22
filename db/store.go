@@ -2,13 +2,15 @@ package db
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"azure.com/ecovo/user-service/models"
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/mongodb/mongo-go-driver/bson/primitive"
 )
 
+// Store is an interface representing the ability to access data stored in a
+// database.
 type Store interface {
 	FindUserByID(ID string) (*models.User, error)
 	FindUserByAuth0ID(ID string) (*models.User, error)
@@ -17,25 +19,20 @@ type Store interface {
 	DeleteUser(user *models.User) error
 }
 
-var nextID int
-
 // FindUserByID looks for a user with the given ID in the database and returns
 // it if it is found.
 func (db *DB) FindUserByID(ID string) (*models.User, error) {
 	objectID, err := primitive.ObjectIDFromHex(ID)
 	if err != nil {
-		// TODO: Return more informative error message
-		return nil, err
+		return nil, fmt.Errorf("store: failed to parse object ID (%s)", err)
 	}
 
 	filter := bson.D{{"_id", objectID}}
 	var user models.User
 	err = db.users.FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
-		// TODO: Return more informative error message
-		return nil, err
+		return nil, fmt.Errorf("store: no user found with ID \"%s\" (%s)", ID, err)
 	}
-
 	return &user, nil
 }
 
@@ -46,8 +43,7 @@ func (db *DB) FindUserByAuth0ID(ID string) (*models.User, error) {
 	var user models.User
 	err := db.users.FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
-		// TODO: Return more informative error message
-		return nil, err
+		return nil, fmt.Errorf("store: no user found with Auth0ID \"%s\" (%s)", ID, err)
 	}
 	return &user, nil
 }
@@ -57,14 +53,12 @@ func (db *DB) FindUserByAuth0ID(ID string) (*models.User, error) {
 func (db *DB) CreateUser(user *models.User) (*models.User, error) {
 	res, err := db.users.InsertOne(context.TODO(), user)
 	if err != nil {
-		// TODO: Return more informative error message
-		return nil, err
+		return nil, fmt.Errorf("store: failed to create user (%s)", err)
 	}
 
 	ID, ok := res.InsertedID.(primitive.ObjectID)
 	if !ok {
-		// TODO: Return more informative error message
-		return nil, err
+		return nil, fmt.Errorf("store: failed to get ID of created user (%s)", err)
 	}
 
 	user.ID = ID
@@ -77,21 +71,15 @@ func (db *DB) CreateUser(user *models.User) (*models.User, error) {
 func (db *DB) UpdateUser(user *models.User) error {
 	filter := bson.D{{"_id", user.ID}}
 	update := bson.D{
-		bson.E{"$set", user}}
+		bson.E{"$set", user},
+	}
 	res, err := db.users.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		// TODO: Return more informative error message
-		return err
+		return fmt.Errorf("store: failed to update user (%s)", err)
 	}
 
 	if res.MatchedCount <= 0 {
-		// TODO: Return more informative error message
-		return errors.New("did not find any matches for update")
-	}
-
-	if res.ModifiedCount <= 0 {
-		// TODO: Return more informative error message
-		return errors.New("did not modify any document")
+		return fmt.Errorf("store: no matching user was found")
 	}
 
 	return nil
@@ -100,15 +88,9 @@ func (db *DB) UpdateUser(user *models.User) error {
 // DeleteUser removes a user from the database.
 func (db *DB) DeleteUser(user *models.User) error {
 	filter := bson.D{{"_id", user.ID}}
-	res, err := db.users.DeleteOne(context.TODO(), filter)
+	_, err := db.users.DeleteOne(context.TODO(), filter)
 	if err != nil {
-		// TODO: Return more informative error message
-		return err
-	}
-
-	if res.DeletedCount <= 0 {
-		// TODO: Return more informative error message
-		return errors.New("did not delete any document")
+		return fmt.Errorf("store: failed to delete user (%s)", err)
 	}
 
 	return nil

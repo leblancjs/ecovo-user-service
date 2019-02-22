@@ -32,7 +32,7 @@ type Config struct {
 // establishing a connection to the database server.
 const DefaultConnectionTimeout = 20 * time.Second
 
-// Validate looks at the configuratin's contents to ensure it has all the
+// Validate looks at the configuration's contents to ensure it has all the
 // required fields.
 func (conf *Config) validate() error {
 	if conf.Host == "" {
@@ -65,9 +65,9 @@ const (
 	userCollectionName = "users"
 )
 
-// NewDB creates a database by establishing a connection to the database server
+// New creates a database by establishing a connection to the database server
 // specified in the given configuration.
-func NewDB(conf *Config) (*DB, error) {
+func New(conf *Config) (*DB, error) {
 	if conf == nil {
 		return nil, errors.New("db: missing configuration")
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -9,7 +10,9 @@ import (
 
 	"azure.com/ecovo/user-service/auth"
 	"azure.com/ecovo/user-service/db"
+	"azure.com/ecovo/user-service/httperror"
 	"azure.com/ecovo/user-service/models"
+	"azure.com/ecovo/user-service/requestid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -42,7 +45,7 @@ func main() {
 		Password:          os.Getenv("DB_PASSWORD"),
 		Name:              os.Getenv("DB_NAME"),
 		ConnectionTimeout: dbConnectionTimeout}
-	db, err := db.NewDB(&dbConfig)
+	db, err := db.New(&dbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,15 +55,15 @@ func main() {
 		store: db}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/users/me", auth.ValidationMiddleware(authValidator, env.getUserFromAuthHandler)).
+	r.HandleFunc("/users/me", requestid.Middleware(auth.ValidationMiddleware(authValidator, env.getUserFromAuthHandler))).
 		Methods("GET")
-	r.HandleFunc("/users/{id}", auth.ValidationMiddleware(authValidator, env.getUserByIDHandler)).
+	r.HandleFunc("/users/{id}", requestid.Middleware(auth.ValidationMiddleware(authValidator, env.getUserByIDHandler))).
 		Methods("GET").
 		Headers("Content-Type", "application/json")
-	r.HandleFunc("/users/{id}", auth.ValidationMiddleware(authValidator, env.updateUserByIDHandler)).
+	r.HandleFunc("/users/{id}", requestid.Middleware(auth.ValidationMiddleware(authValidator, env.updateUserByIDHandler))).
 		Methods("PATCH").
 		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
-	r.HandleFunc("/users", auth.ValidationMiddleware(authValidator, env.createUserHandler)).
+	r.HandleFunc("/users", requestid.Middleware(auth.ValidationMiddleware(authValidator, env.createUserHandler))).
 		Methods("POST").
 		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
 
@@ -72,17 +75,20 @@ func (env *Env) getUserFromAuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	userInfo, err := auth.UserInfoFromContext(r.Context())
 	if err != nil {
-		// TODO: Write more informative error message
-		w.WriteHeader(http.StatusInternalServerError)
+		httperror.Handler(w, r,
+			httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
 	} else {
 		user, err := env.store.FindUserByAuth0ID(userInfo.ID)
 		if err != nil {
-			// TODO: Write more informative error message
-			w.WriteHeader(http.StatusNotFound)
+			httperror.Handler(w, r,
+				httperror.NewNotFoundError(httperror.ErrUserNotFound, err))
 		} else {
 			err := json.NewEncoder(w).Encode(user)
 			if err != nil {
-				log.Print(err)
+				httperror.Handler(w, r,
+					httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
+			} else {
+				w.WriteHeader(http.StatusOK)
 			}
 		}
 	}
@@ -96,14 +102,15 @@ func (env *Env) getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := env.store.FindUserByID(id)
 	if err != nil {
-		// TODO: Write more informative error message
-		w.WriteHeader(http.StatusNotFound)
+		httperror.Handler(w, r,
+			httperror.NewNotFoundError(httperror.ErrUserNotFound, err))
 	} else {
-		w.WriteHeader(http.StatusOK)
-
 		err := json.NewEncoder(w).Encode(user)
 		if err != nil {
-			log.Print(err)
+			httperror.Handler(w, r,
+				httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
+		} else {
+			w.WriteHeader(http.StatusOK)
 		}
 	}
 }
@@ -114,55 +121,66 @@ func (env *Env) updateUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// TODO: Get user from a database
 	user, err := env.store.FindUserByID(id)
 	if err != nil {
-		// TODO: Write more informative error message
-		w.WriteHeader(http.StatusNotFound)
+		httperror.Handler(w, r,
+			httperror.NewNotFoundError(httperror.ErrUserNotFound, err))
 	} else {
 		var modifiedUser models.User
 		err := json.NewDecoder(r.Body).Decode(&modifiedUser)
 		if err != nil {
-			log.Print(err)
-		}
-
-		if modifiedUser.FirstName != "" {
-			user.FirstName = modifiedUser.FirstName
-		}
-		if modifiedUser.LastName != "" {
-			user.LastName = modifiedUser.LastName
-		}
-		if !modifiedUser.DateOfBirth.IsZero() {
-			user.DateOfBirth = modifiedUser.DateOfBirth
-		}
-		if modifiedUser.PhoneNumber != "" {
-			user.PhoneNumber = modifiedUser.PhoneNumber
-		}
-		if modifiedUser.Gender != "" {
-			user.Gender = modifiedUser.Gender
-		}
-		if modifiedUser.Photo != "" {
-			user.Photo = modifiedUser.Photo
-		}
-		if modifiedUser.Description != "" {
-			user.Description = modifiedUser.Description
-		}
-		// TODO: Fix bug where preferences with null value crush existing values
-		if modifiedUser.Preferences != nil {
-			user.Preferences.Smoking = modifiedUser.Preferences.Smoking
-			user.Preferences.Conversation = modifiedUser.Preferences.Conversation
-			user.Preferences.Music = modifiedUser.Preferences.Music
-		}
-		if modifiedUser.SignUpPhase != nil {
-			if user.SignUpPhase == nil {
-				user.SignUpPhase = new(int)
+			httperror.Handler(w, r,
+				httperror.NewBadRequestError(httperror.ErrBadRequest, err))
+		} else {
+			if modifiedUser.FirstName != "" {
+				user.FirstName = modifiedUser.FirstName
 			}
-			*user.SignUpPhase = *modifiedUser.SignUpPhase
+
+			if modifiedUser.LastName != "" {
+				user.LastName = modifiedUser.LastName
+			}
+
+			if !modifiedUser.DateOfBirth.IsZero() {
+				user.DateOfBirth = modifiedUser.DateOfBirth
+			}
+
+			if modifiedUser.PhoneNumber != "" {
+				user.PhoneNumber = modifiedUser.PhoneNumber
+			}
+
+			if modifiedUser.Gender != "" {
+				user.Gender = modifiedUser.Gender
+			}
+
+			if modifiedUser.Photo != "" {
+				user.Photo = modifiedUser.Photo
+			}
+
+			if modifiedUser.Description != "" {
+				user.Description = modifiedUser.Description
+			}
+
+			if modifiedUser.Preferences != nil {
+				user.Preferences.Smoking = modifiedUser.Preferences.Smoking
+				user.Preferences.Conversation = modifiedUser.Preferences.Conversation
+				user.Preferences.Music = modifiedUser.Preferences.Music
+			}
+
+			if modifiedUser.SignUpPhase != nil {
+				if user.SignUpPhase == nil {
+					user.SignUpPhase = new(int)
+				}
+				*user.SignUpPhase = *modifiedUser.SignUpPhase
+			}
+
+			err := env.store.UpdateUser(user)
+			if err != nil {
+				httperror.Handler(w, r,
+					httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
+			} else {
+				w.WriteHeader(http.StatusOK)
+			}
 		}
-
-		env.store.UpdateUser(user)
-
-		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -171,26 +189,20 @@ func (env *Env) createUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	userInfo, err := auth.UserInfoFromContext(r.Context())
 	if err != nil {
-		// TODO: Write more informative error message
-		w.WriteHeader(http.StatusInternalServerError)
+		httperror.Handler(w, r,
+			httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
 	} else {
-		// TODO: Check if user exists in a database
 		user, _ := env.store.FindUserByAuth0ID(userInfo.ID)
 		if user != nil {
-			// TODO: Write more informative error message
-			w.WriteHeader(http.StatusInternalServerError)
+			httperror.Handler(w, r,
+				httperror.NewInternalServerError(httperror.ErrInternalServerError, errors.New("user already exists with given Auth0 ID")))
 		} else {
 			err := json.NewDecoder(r.Body).Decode(&user)
 			if err != nil {
-				log.Print(err)
-
-				// TODO: Write more informative error message
-				w.WriteHeader(http.StatusBadRequest)
+				httperror.Handler(w, r,
+					httperror.NewBadRequestError(httperror.ErrBadRequest, err))
 			} else {
 				user.Auth0ID = userInfo.ID
-
-				// TODO: Validate presence of required fields
-				// ...
 
 				if user.Preferences == nil {
 					user.Preferences = &models.UserPreferences{}
@@ -202,27 +214,24 @@ func (env *Env) createUserHandler(w http.ResponseWriter, r *http.Request) {
 				user.SignUpPhase = new(int)
 				*user.SignUpPhase = 1
 
-				// TODO: Write the user to a database
-				user, err = env.store.CreateUser(user)
+				err = user.Validate()
 				if err != nil {
-					log.Print(err)
-
-					// TODO: Write more informative error message
-					w.WriteHeader(http.StatusInternalServerError)
+					httperror.Handler(w, r,
+						httperror.NewBadRequestError("Malformed request body: "+err.Error(), err))
 				} else {
-					err = json.NewEncoder(w).Encode(user)
+					user, err = env.store.CreateUser(user)
 					if err != nil {
-						log.Print(err)
-
-						err = env.store.DeleteUser(user)
-						if err != nil {
-							log.Print(err)
-						}
-
-						// TODO: Write more informative error message
-						w.WriteHeader(http.StatusInternalServerError)
+						httperror.Handler(w, r,
+							httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
 					} else {
-						w.WriteHeader(http.StatusCreated)
+						err = json.NewEncoder(w).Encode(user)
+						if err != nil {
+							env.store.DeleteUser(user)
+							httperror.Handler(w, r,
+								httperror.NewInternalServerError(httperror.ErrInternalServerError, err))
+						} else {
+							w.WriteHeader(http.StatusCreated)
+						}
 					}
 				}
 			}

@@ -3,9 +3,9 @@
 The user service implements the user REST API. It makes it possible to access a user's details, such as it's profile, as well as create and update a user.
 
 ## To-Do
-* Document errors codes/responses more cleanly
 * Refactor handlers to reduce the amount of business logic they have
-* Add validation to the user struct
+* (includes previous point) Refactor to "clean architecture" :)
+* Write some automated tests!!! Postman is tedious to use
 * Add table of contents to README
 
 ## Configuration
@@ -111,6 +111,13 @@ To release the container that was pushed in the previous step, use the following
 heroku container:release web
 ```
 
+#### Step 3 - (Optional) Check the Logs
+To check the logs to make sure everything went well, use the following command:
+
+```
+heroku logs --tail
+```
+
 ## Endpoints
 ### GET /users/me
 #### Request
@@ -120,10 +127,8 @@ Authorization: Bearer {access_token}
 ```
 
 #### Response
-##### Status Code(s)
-* 200 OK upon success
-* 401 Not Authorized if no token is present or it is invalid
-* 404 Not Found if no user exists for the given authorization
+##### Status Code
+200 OK
 
 ##### Headers
 ```
@@ -150,6 +155,10 @@ Content-Type: application/json
     "signUpPhase": "{0|1}"
 }
 ```
+
+##### Possible Errors
+* 404 Not Found
+* 500 Internal Server Error
 
 ### GET /users/{id}
 #### URL Parameters
@@ -164,10 +173,8 @@ Authorization: Bearer {access_token}
 ```
 
 #### Response
-##### Status Code(s)
-* 200 OK upon success
-* 401 Not Authorized if no token is present or it is invalid
-* 404 Not Found if no user exists for the given ID
+##### Status Code
+200 OK
 
 ##### Headers
 ```
@@ -194,6 +201,10 @@ Content-Type: application/json
     "signUpPhase": "{0|1}"
 }
 ```
+
+##### Possible Errors
+* 404 Not Found
+* 500 Internal Server Error
 
 ### POST /users
 #### Request
@@ -225,10 +236,7 @@ The following example shows all the fields that can be included:
 
 #### Response
 ##### Status Code
-* 201 CREATED upon success
-* 400 Bad Request if the payload is malformated
-* 401 Not Authorized if no token is present or it is invalid
-* 500 Internal Server Error if something else goes wrong
+* 201 CREATED
 
 ##### Headers
 ```
@@ -254,6 +262,10 @@ Content-Type: application/json
     "signUpPhase": {0|1}
 }
 ```
+
+##### Possible Errors
+* 400 Bad Request
+* 500 Internal Server Error
 
 ### PATCH /users/{id}
 #### URL Parameters
@@ -288,13 +300,51 @@ The following example shows all the fields that can be modified:
 ```
 
 #### Response
-##### Status Code(s)
-* 200 OK upon success
-* 400 Bad Request if the payload is malformated
-* 401 Not Authorized if no token is present or it is invalid
-* 404 Not Found if no user exists for the given ID
+##### Status Code
+200 OK
 
 ##### Headers
 ```
 Content-Type: application/json
 ```
+
+##### Possible Errors
+* 400 Bad Request
+* 500 Internal Server Error
+
+## Errors
+### Structure
+The errors returned by the service have the following format:
+
+```
+{
+    "code": {code},
+    "error": "{errorMessage}"
+    "requestId": "{requestId}"
+}
+```
+
+#### Code
+The code generally aligns with the HTTP status code. Its purpose is to give a
+general idea of what went wrong. As a rule of thumb, if the code is `500`,
+something went wrong on the service's end. Otherwise, it's not our fault :D.
+
+#### Error
+The error gives additional information related to the error. For example, in
+the case of a `400 Bad Request`, it might contain the name of the field that
+was missing.
+
+#### Request ID
+The request ID is everyone's best friend. When you an error response that has a
+`500` status code and an error message that says that you need to contact a
+system administrator, you need to keep that ID! If you look at the server logs,
+the internal error will be logged with that request ID, so we can find out what
+went wrong.
+
+### Possible Errors
+|Status Code|Meaning|Description|
+|---|---|---|
+|400|Bad Request|A bad request could mean that the body is missing a required field, or has an error in its JSON syntax. In the case of a missing field, it should be included in the error message.
+|401|Unauthorized|As the name suggests, this means that the user does is not authorized to access the resource. Normally, this is because the token is invalid or expired.
+|404|Not Found|When no user can be found for a given ID, we'll tell ya! Try again when it's created ;).
+|500|Internal Server Error|We don't like this one. It means that the service made a mistake! It could be that we couldn't encode a response, or that our database flipped us off. Either way, take that precious request ID and ask us to look into it!
