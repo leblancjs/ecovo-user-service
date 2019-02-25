@@ -221,6 +221,7 @@ func (env *Env) createUserHandler(w http.ResponseWriter, r *http.Request) {
 					httperror.NewBadRequestError(httperror.ErrBadRequest, err))
 			} else {
 				user.Auth0ID = userInfo.ID
+				user.Email = userInfo.Email
 
 				if user.Preferences == nil {
 					user.Preferences = &models.UserPreferences{}

@@ -237,22 +237,14 @@ Authorization: Bearer {access_token}
 ```
 
 ##### Body
-The following example shows all the fields that can be included:
 ```
 {
-    "email": "{email}",
     "firstName": "{firstName}",
     "lastName": "{lastName",
     "dateOfBirth": "{timestamp}",
     "phoneNumber": "{phoneNumber}",
     "gender": "{Male|Female}",
-    "photo": "{photoUrl}",
-    "description": "{description}",
-    "preferences": {
-        "smoking": "{0|1|2}",
-        "conversation": "{0|1|2}",
-        "music": "{0|1|2}"
-    }
+    "photo": "{photoUrl}"
 }
 ```
 
@@ -268,6 +260,7 @@ Content-Type: application/json
 ##### Body
 ```
 {
+    "id": "{id}",
     "email": "{email}",
     "firstName": "{firstName}",
     "lastName": "{lastName}",
