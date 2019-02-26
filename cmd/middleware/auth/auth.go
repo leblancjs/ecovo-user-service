@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 )
 
 // UserInfo contains a user's basic information extracted from an access token.
 type UserInfo struct {
-	ID        string `json:"sub,omitempty"`
+	SubID     string `json:"sub,omitempty"`
 	FirstName string `json:"given_name"`
 	LastName  string `json:"family_name"`
 	Picture   string `json:"picture"`
@@ -71,24 +70,24 @@ func NewTokenValidator(conf *Config) (Validator, error) {
 func (validator *TokenValidator) Validate(authHeader string) (*UserInfo, error) {
 	req, err := http.NewRequest("GET", "https://"+validator.conf.Domain+"/userinfo", nil)
 	if err != nil {
-		return nil, fmt.Errorf("auth: failed to create request (%s)", err)
+		return nil, UnauthorizedError{fmt.Sprintf("auth.TokenValidator: failed to create request (%s)", err)}
 	}
 
 	req.Header.Set("Authorization", authHeader)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("auth: failed to make request (%s)", err)
+		return nil, UnauthorizedError{fmt.Sprintf("auth: failed to make request (%s)", err)}
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("auth: failed to validate token")
+		return nil, UnauthorizedError{fmt.Sprintf("auth: failed to validate token")}
 	}
 
 	var userInfo UserInfo
 	err = json.NewDecoder(resp.Body).Decode(&userInfo)
 	if err != nil {
-		return nil, fmt.Errorf("auth: failed to decode user info (%s)", err)
+		return nil, UnauthorizedError{fmt.Sprintf("auth: failed to decode user info (%s)", err)}
 	}
 	return &userInfo, nil
 }
@@ -100,39 +99,21 @@ func (c contextKey) String() string {
 }
 
 const (
-	userInfoContextKey = contextKey("userInfo")
+	// UserInfoContextKey represents the key used to store and retrieve the
+	// user information from the request context.
+	UserInfoContextKey = contextKey("userInfo")
 )
 
-// ValidationMiddleware validates a request's authorization header using the
-// given validator to ensure that the user is authorized to access an endpoint
-// and extracts the authenticated user's information.
-//
-// The authenticated user's information placed in the request's context and can
-// be accessed by using the UserInfoFromContext utility function.
-func ValidationMiddleware(validator Validator, next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userInfo, err := validator.Validate(r.Header.Get("Authorization"))
-		if err != nil {
-			log.Println(err)
-
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		} else {
-			ctx := context.WithValue(r.Context(), userInfoContextKey, userInfo)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		}
-	})
-}
-
-// UserInfoFromContext extracts an authenticated user's information from
-// request's context.
-func UserInfoFromContext(ctx context.Context) (*UserInfo, error) {
+// FromContext extracts an authenticated user's information from the request's
+// context.
+func FromContext(ctx context.Context) (*UserInfo, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("auth: request context is nil")
 	}
 
-	userInfo := ctx.Value(userInfoContextKey).(*UserInfo)
-	if userInfo == nil {
-		return nil, fmt.Errorf("auth: %s not found in context", userInfoContextKey)
+	userInfo, ok := ctx.Value(UserInfoContextKey).(*UserInfo)
+	if !ok {
+		return nil, fmt.Errorf("auth: %s not found in context", UserInfoContextKey)
 	}
 
 	return userInfo, nil

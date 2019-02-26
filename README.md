@@ -12,9 +12,7 @@
 The user service implements the user REST API. It makes it possible to access a user's details, such as it's profile, as well as create and update a user.
 
 ## To-Do
-* Refactor handlers to reduce the amount of business logic they have
-* (includes previous point) Refactor to "clean architecture" :)
-* Write some automated tests!!! Postman is tedious to use
+* Write unit tests for the use case (service) layer
 
 ## Configuration
 The application's database connection and Auth0 domain are configured using environment variables. To avoid having to define them every time the service is run, they are kept in the `.env` file at the root of the repository.
@@ -242,7 +240,6 @@ Authorization: Bearer {access_token}
     "firstName": "{firstName}",
     "lastName": "{lastName",
     "dateOfBirth": "{timestamp}",
-    "phoneNumber": "{phoneNumber}",
     "gender": "{Male|Female}",
     "photo": "{photoUrl}"
 }
@@ -274,7 +271,7 @@ Content-Type: application/json
         "conversation": {0|1|2},
         "music": {0|1|2}
     },
-    "signUpPhase": "{personalInfo|preferences|done}"
+    "signUpPhase": "preferences"
 }
 ```
 
@@ -298,6 +295,7 @@ Authorization: Bearer {access_token}
 The following example shows all the fields that can be modified:
 ```
 {
+    "email": "{email}",
     "firstName": "{firstName}",
     "lastName": "{lastName}",
     "dateOfBirth": "{dateOfBirth}",
@@ -334,7 +332,7 @@ The errors returned by the service have the following format:
 ```
 {
     "code": {code},
-    "error": "{errorMessage}"
+    "message": "{message}"
     "requestId": "{requestId}"
 }
 ```
@@ -344,8 +342,8 @@ The code generally aligns with the HTTP status code. Its purpose is to give a
 general idea of what went wrong. As a rule of thumb, if the code is `500`,
 something went wrong on the service's end. Otherwise, it's not our fault :D.
 
-#### Error
-The error gives additional information related to the error. For example, in
+#### Message
+The message gives additional information related to the error. For example, in
 the case of a `400 Bad Request`, it might contain the name of the field that
 was missing.
 

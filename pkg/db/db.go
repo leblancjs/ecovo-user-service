@@ -62,7 +62,7 @@ func (conf *Config) validate() error {
 // server and the database's collections.
 type DB struct {
 	client *mongo.Client
-	users  *mongo.Collection
+	Users  *mongo.Collection
 }
 
 const (

@@ -13,3 +13,7 @@
 
 # Binary
 user-service
+**/debug
+
+# GoLand
+.idea
