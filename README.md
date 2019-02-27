@@ -98,7 +98,7 @@ need to link the Git repository to the application.
 To do so, run the following command in a terminal:
 
 ```
-heroku create ecovo-user-service
+git remote add heroku git@heroku.com:ecovo-user-service.git
 ```
 
 This step only needs to be done once, after you've cloned the Git repository.
