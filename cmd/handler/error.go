@@ -7,6 +7,7 @@ import (
 	"azure.com/ecovo/user-service/cmd/middleware/auth"
 	"azure.com/ecovo/user-service/pkg/entity"
 	"azure.com/ecovo/user-service/pkg/user"
+	"azure.com/ecovo/user-service/pkg/vehicule"
 )
 
 // An Error is an application error that can be handled by a handler.
@@ -33,6 +34,10 @@ func WrapError(err error) *Error {
 		return &Error{http.StatusNotFound, "user does not exist", err}
 	} else if _, ok := err.(user.AlreadyExistsError); ok {
 		return &Error{http.StatusInternalServerError, "user already exists", err}
+	} else if _, ok := err.(vehicule.NotFoundError); ok {
+		return &Error{http.StatusNotFound, "vehicule does not exist", err}
+	} else if _, ok := err.(vehicule.WrongUserError); ok {
+		return &Error{http.StatusForbidden, "cannot modify vehicule of another user", err}
 	} else {
 		return &Error{
 			http.StatusInternalServerError,

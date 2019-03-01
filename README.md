@@ -325,6 +325,151 @@ Content-Type: application/json
 * 400 Bad Request
 * 500 Internal Server Error
 
+### GET /users/{userId}/vehicules/{id}
+#### URL Parameters
+##### userId
+The user's unique identifier generated when it is created.
+##### id
+The vehicules's unique identifier generated when it is created.
+
+#### Request
+##### Headers
+```
+Content-Type: application/json
+Authorization: Bearer {access_token}
+```
+
+#### Response
+##### Status Code
+200 OK
+
+##### Headers
+```
+Content-Type: application/json
+```
+
+##### Body
+```
+{
+    "id": "{id}",
+    "userId": "{userId}",
+    "year": "{year}",
+    "make": "{make}",
+    "model": "{model}",
+    "color": "{color}",
+    "photo": "{photoUrl}",
+    "accessories": []
+}
+```
+
+##### Possible Errors
+* 404 Not Found
+* 500 Internal Server Error
+
+### GET /users/{userId}/vehicules
+#### URL Parameters
+##### userId
+The user's unique identifier generated when it is created.
+
+#### Request
+##### Headers
+```
+Content-Type: application/json
+Authorization: Bearer {access_token}
+```
+
+#### Response
+##### Status Code
+200 OK
+
+##### Headers
+```
+Content-Type: application/json
+```
+
+##### Body
+```
+{
+    "id": "{id}",
+    "userId": "{userId}",
+    "year": "{year}",
+    "make": "{make}",
+    "model": "{model}",
+    "color": "{color}",
+    "photo": "{photoUrl}",
+    "accessories": []
+}
+```
+
+##### Possible Errors
+* 404 Not Found
+* 500 Internal Server Error
+
+### POST /users/{userId}/vehicules
+#### Request
+##### Headers
+```
+Content-Type: application/json
+Authorization: Bearer {access_token}
+```
+
+##### Body
+```
+{
+    "year": "{year}",
+    "make": "{make}",
+    "model": "{model}",
+    "color": "{color}",
+    "photo": "{photoUrl}",
+    "accessories": []
+}
+```
+
+#### Response
+##### Status Code
+* 201 CREATED
+
+##### Headers
+```
+Content-Type: application/json
+```
+
+##### Body
+```
+{
+    "id": "{id}",
+    "userId": "{userId}",
+    "year": "{year}",
+    "make": "{make}",
+    "model": "{model}",
+    "color": "{color}",
+    "photo": "{photoUrl}",
+    "accessories": []
+}
+```
+
+##### Possible Errors
+* 400 Bad Request
+* 500 Internal Server Error
+
+### DELETE /users/{userId}/vehicules/{id}
+#### URL Parameters
+##### userId
+The user's unique identifier generated when it is created.
+##### id
+The vehicule's unique identifier generated when it is created.
+
+#### Request
+##### Headers
+```
+Content-Type: application/json
+Authorization: Bearer {access_token}
+```
+
+#### Response
+##### Status Code
+200 OK
+
 ## Errors
 ### Structure
 The errors returned by the service have the following format:

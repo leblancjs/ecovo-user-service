@@ -61,12 +61,14 @@ func (conf *Config) validate() error {
 // DB represents a database. It contains a client used to connect to a database
 // server and the database's collections.
 type DB struct {
-	client *mongo.Client
-	Users  *mongo.Collection
+	client    *mongo.Client
+	Users     *mongo.Collection
+	Vehicules *mongo.Collection
 }
 
 const (
-	userCollectionName = "users"
+	userCollectionName     = "users"
+	vehiculeCollectionName = "vehicules"
 )
 
 // New creates a database by establishing a connection to the database server
@@ -110,5 +112,10 @@ func New(conf *Config) (*DB, error) {
 		return nil, fmt.Errorf("db: no collection found with name \"%s\" in database", userCollectionName)
 	}
 
-	return &DB{client, users}, nil
+	vehicules := db.Collection(vehiculeCollectionName)
+	if vehicules == nil {
+		return nil, fmt.Errorf("db: no collection found with name \"%s\" in database", vehiculeCollectionName)
+	}
+
+	return &DB{client, users, vehicules}, nil
 }

@@ -10,6 +10,7 @@ import (
 	"azure.com/ecovo/user-service/cmd/middleware/auth"
 	"azure.com/ecovo/user-service/pkg/db"
 	"azure.com/ecovo/user-service/pkg/user"
+	"azure.com/ecovo/user-service/pkg/vehicule"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -48,7 +49,15 @@ func main() {
 	}
 	userUseCase := user.NewService(userRepository)
 
+	vehiculeRepository, err := vehicule.NewMongoRepository(db.Vehicules)
+	if err != nil {
+		log.Fatal(err)
+	}
+	vehiculeUseCase := vehicule.NewService(vehiculeRepository, userUseCase)
+
 	r := mux.NewRouter()
+
+	// Users
 	r.Handle("/users/me", handler.RequestID(handler.Auth(authValidator, handler.GetUserFromAuth(userUseCase)))).
 		Methods("GET")
 	r.Handle("/users/{id}", handler.RequestID(handler.Auth(authValidator, handler.GetUserByID(userUseCase)))).
@@ -58,6 +67,19 @@ func main() {
 		Methods("PATCH").
 		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
 	r.Handle("/users", handler.RequestID(handler.Auth(authValidator, handler.CreateUser(userUseCase)))).
+		Methods("POST").
+		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
+
+	// Vehicules
+	r.Handle("/users/{userId}/vehicules", handler.RequestID(handler.Auth(authValidator, handler.GetVehiculesByUserID(userUseCase, vehiculeUseCase)))).
+		Methods("GET")
+	r.Handle("/users/{userId}/vehicules/{id}", handler.RequestID(handler.Auth(authValidator, handler.GetVehiculeByID(userUseCase, vehiculeUseCase)))).
+		Methods("GET").
+		Headers("Content-Type", "application/json")
+	r.Handle("/users/{userId}/vehicules/{id}", handler.RequestID(handler.Auth(authValidator, handler.DeleteVehicule(userUseCase, vehiculeUseCase)))).
+		Methods("DELETE").
+		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
+	r.Handle("/users/{userId}/vehicules", handler.RequestID(handler.Auth(authValidator, handler.CreateVehicule(userUseCase, vehiculeUseCase)))).
 		Methods("POST").
 		HeadersRegexp("Content-Type", "application/(json|json; charset=utf8)")
 
