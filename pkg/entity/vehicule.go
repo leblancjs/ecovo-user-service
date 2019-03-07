@@ -14,11 +14,12 @@ type Vehicule struct {
 	Model       string   `json:"model" bson:"model"`
 	Color       string   `json:"color" bson:"color"`
 	Photo       string   `json:"photo" bson:"photo"`
+	Seats       int      `json:"seats" bson:"seats"`
 	Accessories []string `json:"accessories" bson:"accessories"`
 }
 
 const (
-	// YearMimimum represents the minimum year of a car.
+	// YearMinimum represents the minimum year of a car.
 	YearMinimum = 1900
 )
 
@@ -38,6 +39,10 @@ func (v *Vehicule) Validate() error {
 
 	if v.Color == "" {
 		return ValidationError{"color is missing"}
+	}
+
+	if v.Seats < 1 {
+		return ValidationError{"minimum number of seats is 1"}
 	}
 
 	return nil

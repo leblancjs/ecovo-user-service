@@ -25,6 +25,7 @@ type document struct {
 	Model       string             `bson:"model"`
 	Color       string             `bson:"color"`
 	Photo       string             `bson:"photo"`
+	Seats       int                `bson:"seats"`
 	Accessories []string           `bson:"accessories"`
 }
 
@@ -65,6 +66,7 @@ func newDocumentFromEntity(v *entity.Vehicule) (*document, error) {
 		v.Model,
 		v.Color,
 		v.Photo,
+		v.Seats,
 		v.Accessories,
 	}, nil
 }
@@ -78,6 +80,7 @@ func (d document) Entity() *entity.Vehicule {
 		d.Model,
 		d.Color,
 		d.Photo,
+		d.Seats,
 		d.Accessories,
 	}
 }
@@ -107,7 +110,7 @@ func (r *MongoRepository) FindByID(ID entity.ID) (*entity.Vehicule, error) {
 	return d.Entity(), nil
 }
 
-// FindBySubID retrieves the vehicule with the given subscription ID, if it exists.
+// FindByUserID retrieves the vehicule with the given subscription ID, if it exists.
 func (r *MongoRepository) FindByUserID(userID entity.ID) ([]*entity.Vehicule, error) {
 	objectID, err := primitive.ObjectIDFromHex(string(userID))
 	findOptions := options.Find()

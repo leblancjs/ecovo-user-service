@@ -13,6 +13,7 @@ func TestVehiculeValidation(t *testing.T) {
 		Make:        "Audi",
 		Model:       "A4",
 		Color:       "Noir",
+		Seats:       1,
 		Accessories: accessories,
 	}
 
@@ -55,6 +56,15 @@ func TestVehiculeValidation(t *testing.T) {
 	t.Run("Should fail when color is empty", func(t *testing.T) {
 		v := vehicule
 		v.Color = ""
+
+		if _, ok := v.Validate().(ValidationError); !ok {
+			t.Fail()
+		}
+	})
+
+	t.Run("Should fail when seats is less than 1", func(t *testing.T) {
+		v := vehicule
+		v.Seats = 1
 
 		if _, ok := v.Validate().(ValidationError); !ok {
 			t.Fail()
