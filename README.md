@@ -368,6 +368,7 @@ Content-Type: application/json
     "model": "{model}",
     "color": "{color}",
     "photo": "{photoUrl}",
+    "seats": "{seats}",
     "accessories": []
 }
 ```
@@ -407,6 +408,7 @@ Content-Type: application/json
     "model": "{model}",
     "color": "{color}",
     "photo": "{photoUrl}",
+    "seats": "{seats}",
     "accessories": []
 }
 ```
@@ -431,6 +433,7 @@ Authorization: Bearer {access_token}
     "model": "{model}",
     "color": "{color}",
     "photo": "{photoUrl}",
+    "seats": "{seats}",
     "accessories": []
 }
 ```
@@ -454,6 +457,7 @@ Content-Type: application/json
     "model": "{model}",
     "color": "{color}",
     "photo": "{photoUrl}",
+    "seats": "{seats}",
     "accessories": []
 }
 ```
