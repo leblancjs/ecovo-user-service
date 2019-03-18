@@ -26,6 +26,8 @@ func TestUserValidation(t *testing.T) {
 		Description: "So much pain.",
 		Preferences: &preferences,
 		SignUpPhase: SignUpPhasePersonalInfo,
+		UserRating: 4,
+		DriverRating: 2,
 	}
 
 	t.Run("Should fail when subscription ID is empty", func(t *testing.T) {
@@ -187,6 +189,42 @@ func TestUserValidation(t *testing.T) {
 		err := u.Validate()
 		if err != nil {
 			t.Error(err)
+		}
+	})
+
+	t.Run("Should fail when user rating is over then 5", func(t *testing.T) {
+		u := user
+		u.UserRating = 6
+
+		if _, ok := u.Validate().(ValidationError); !ok {
+			t.Fail()
+		}
+	})
+
+	t.Run("Should fail when user rating is under then 0", func(t *testing.T) {
+		u := user
+		u.UserRating = -1
+
+		if _, ok := u.Validate().(ValidationError); !ok {
+			t.Fail()
+		}
+	})
+
+	t.Run("Should fail when driver rating is over then 5", func(t *testing.T) {
+		u := user
+		u.DriverRating = 6
+
+		if _, ok := u.Validate().(ValidationError); !ok {
+			t.Fail()
+		}
+	})
+
+	t.Run("Should fail when driver rating is under then 0", func(t *testing.T) {
+		u := user
+		u.DriverRating = -1
+
+		if _, ok := u.Validate().(ValidationError); !ok {
+			t.Fail()
 		}
 	})
 }

@@ -20,6 +20,8 @@ type User struct {
 	Description string       `json:"description" bson:"description"`
 	Preferences *Preferences `json:"preferences" bson:"preferences"`
 	SignUpPhase string       `json:"signUpPhase" bson:"signUpPhase"`
+	UserRating	int			`json:"userRating" bson:"userRating"`
+	DriverRating	int			`json:"driverRating" bson:"driverRating"`
 }
 
 const (
@@ -91,6 +93,14 @@ func (u *User) Validate() error {
 		strings.Compare(u.SignUpPhase, SignUpPhasePreferences) != 0 &&
 		strings.Compare(u.SignUpPhase, SignUpPhaseDone) != 0 {
 		return ValidationError{fmt.Sprintf("sign up phase must be %s, %s or %s", SignUpPhasePersonalInfo, SignUpPhasePreferences, SignUpPhaseDone)}
+	}
+
+	if u.UserRating > 0 || u.UserRating < 5 {
+		return ValidationError{"user rating is not between 0 and 5"}
+	}
+
+	if u.DriverRating > 0 || u.DriverRating < 5 {
+		return ValidationError{"driver rating is not between 0 and 5"}
 	}
 
 	return nil

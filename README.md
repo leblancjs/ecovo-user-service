@@ -183,7 +183,9 @@ Otherwise, the usual `GET /users/{id}` response will be returned.
         "conversation": "{0|1|2}",
         "music": "{0|1|2}"
     },
-    "signUpPhase": "{personalInfo|preferences|done}"
+    "signUpPhase": "{personalInfo|preferences|done}",
+    "userRating": "{0|1|2|3|4|5}",
+    "driverRating": "{0|1|2|3|4|5}"
 }
 ```
 
@@ -228,7 +230,9 @@ Content-Type: application/json
         "conversation": "{0|1|2}",
         "music": "{0|1|2}"
     },
-    "signUpPhase": "{personalInfo|preferences|done}"
+    "signUpPhase": "{personalInfo|preferences|done}",
+    "userRating": "{0|1|2|3|4|5}",
+    "driverRating": "{0|1|2|3|4|5}"
 }
 ```
 
@@ -281,7 +285,9 @@ Content-Type: application/json
         "conversation": {0|1|2},
         "music": {0|1|2}
     },
-    "signUpPhase": "preferences"
+    "signUpPhase": "preferences",
+    "userRating": "{0|1|2|3|4|5}",
+    "driverRating": "{0|1|2|3|4|5}"
 }
 ```
 
@@ -318,7 +324,9 @@ The following example shows all the fields that can be modified:
         "conversation": {0|1|2},
         "music": {0|1|2}
     },
-    "signUpPhase": "{personalInfo|preferences|done}"
+    "signUpPhase": "{personalInfo|preferences|done}",
+    "userRating": "{0|1|2|3|4|5}",
+    "driverRating": "{0|1|2|3|4|5}"
 }
 ```
 

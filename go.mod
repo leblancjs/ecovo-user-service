@@ -6,9 +6,10 @@ require (
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.7.0
-	github.com/mongodb/mongo-go-driver v0.3.0
+	github.com/mongodb/mongo-go-driver v1.0.0
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
 	github.com/xdg/stringprep v1.0.0 // indirect
+	go.mongodb.org/mongo-driver v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20190211182817-74369b46fc67 // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
 	golang.org/x/text v0.3.0 // indirect

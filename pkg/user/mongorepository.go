@@ -30,6 +30,8 @@ type document struct {
 	Description string              `bson:"description"`
 	Preferences *entity.Preferences `bson:"preferences"`
 	SignUpPhase string              `bson:"signUpPhase"`
+	UserRating	int			`json:"userRating" bson:"userRating"`
+	DriverRating	int			`json:"driverRating" bson:"driverRating"`
 }
 
 func newDocumentFromEntity(u *entity.User) (*document, error) {
@@ -62,6 +64,8 @@ func newDocumentFromEntity(u *entity.User) (*document, error) {
 		u.Description,
 		u.Preferences,
 		u.SignUpPhase,
+		u.UserRating,
+		u.DriverRating,
 	}, nil
 }
 
@@ -79,6 +83,8 @@ func (d document) Entity() *entity.User {
 		d.Description,
 		d.Preferences,
 		d.SignUpPhase,
+		d.UserRating,
+		d.DriverRating,
 	}
 }
 
