@@ -8,18 +8,20 @@ import (
 
 // User contains a user's profile.
 type User struct {
-	ID          ID           `json:"id" bson:"_id,omitempty"`
-	SubID       string       `json:"-" bson:"subId"`
-	Email       string       `json:"email" bson:"email"`
-	FirstName   string       `json:"firstName" bson:"firstName"`
-	LastName    string       `json:"lastName" bson:"lastName"`
-	DateOfBirth time.Time    `json:"dateOfBirth" bson:"dateOfBirth"`
-	PhoneNumber string       `json:"phoneNumber" bson:"phoneNumber"`
-	Gender      string       `json:"gender" bson:"gender"`
-	Photo       string       `json:"photo" bson:"photo"`
-	Description string       `json:"description" bson:"description"`
-	Preferences *Preferences `json:"preferences" bson:"preferences"`
-	SignUpPhase string       `json:"signUpPhase" bson:"signUpPhase"`
+	ID           ID           `json:"id" bson:"_id,omitempty"`
+	SubID        string       `json:"-" bson:"subId"`
+	Email        string       `json:"email" bson:"email"`
+	FirstName    string       `json:"firstName" bson:"firstName"`
+	LastName     string       `json:"lastName" bson:"lastName"`
+	DateOfBirth  time.Time    `json:"dateOfBirth" bson:"dateOfBirth"`
+	PhoneNumber  string       `json:"phoneNumber" bson:"phoneNumber"`
+	Gender       string       `json:"gender" bson:"gender"`
+	Photo        string       `json:"photo" bson:"photo"`
+	Description  string       `json:"description" bson:"description"`
+	Preferences  *Preferences `json:"preferences" bson:"preferences"`
+	SignUpPhase  string       `json:"signUpPhase" bson:"signUpPhase"`
+	UserRating   int          `json:"userRating" bson:"userRating"`
+	DriverRating int          `json:"driverRating" bson:"driverRating"`
 }
 
 const (
@@ -46,6 +48,12 @@ const (
 
 	// SignUpPhaseDone means that the user has completed all sign up phases.
 	SignUpPhaseDone = "done"
+
+	// RatingMinimum represents the minimum rating than a user could be have.
+	RatingMinimum = 0
+
+	// RatingMaximum represents the maximum rating than a user could be have.
+	RatingMaximum = 5
 )
 
 // Validate validates that the user's required fields are filled out correctly.
@@ -91,6 +99,14 @@ func (u *User) Validate() error {
 		strings.Compare(u.SignUpPhase, SignUpPhasePreferences) != 0 &&
 		strings.Compare(u.SignUpPhase, SignUpPhaseDone) != 0 {
 		return ValidationError{fmt.Sprintf("sign up phase must be %s, %s or %s", SignUpPhasePersonalInfo, SignUpPhasePreferences, SignUpPhaseDone)}
+	}
+
+	if u.UserRating < RatingMinimum || u.UserRating > RatingMaximum {
+		return ValidationError{fmt.Sprintf("user rating is not between (%d) and (%d)", RatingMinimum, RatingMaximum)}
+	}
+
+	if u.DriverRating < RatingMinimum || u.DriverRating > RatingMaximum {
+		return ValidationError{fmt.Sprintf("driver rating is not between (%d) and (%d)", RatingMinimum, RatingMaximum)}
 	}
 
 	return nil

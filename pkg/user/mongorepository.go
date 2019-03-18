@@ -18,18 +18,20 @@ type MongoRepository struct {
 }
 
 type document struct {
-	ID          primitive.ObjectID  `bson:"_id,omitempty"`
-	SubID       string              `bson:"subId"`
-	Email       string              `bson:"email"`
-	FirstName   string              `bson:"firstName"`
-	LastName    string              `bson:"lastName"`
-	DateOfBirth time.Time           `bson:"dateOfBirth"`
-	PhoneNumber string              `bson:"phoneNumber"`
-	Gender      string              `bson:"gender"`
-	Photo       string              `bson:"photo"`
-	Description string              `bson:"description"`
-	Preferences *entity.Preferences `bson:"preferences"`
-	SignUpPhase string              `bson:"signUpPhase"`
+	ID           primitive.ObjectID  `bson:"_id,omitempty"`
+	SubID        string              `bson:"subId"`
+	Email        string              `bson:"email"`
+	FirstName    string              `bson:"firstName"`
+	LastName     string              `bson:"lastName"`
+	DateOfBirth  time.Time           `bson:"dateOfBirth"`
+	PhoneNumber  string              `bson:"phoneNumber"`
+	Gender       string              `bson:"gender"`
+	Photo        string              `bson:"photo"`
+	Description  string              `bson:"description"`
+	Preferences  *entity.Preferences `bson:"preferences"`
+	SignUpPhase  string              `bson:"signUpPhase"`
+	UserRating   int                 `json:"userRating" bson:"userRating"`
+	DriverRating int                 `json:"driverRating" bson:"driverRating"`
 }
 
 func newDocumentFromEntity(u *entity.User) (*document, error) {
@@ -62,6 +64,8 @@ func newDocumentFromEntity(u *entity.User) (*document, error) {
 		u.Description,
 		u.Preferences,
 		u.SignUpPhase,
+		u.UserRating,
+		u.DriverRating,
 	}, nil
 }
 
@@ -79,6 +83,8 @@ func (d document) Entity() *entity.User {
 		d.Description,
 		d.Preferences,
 		d.SignUpPhase,
+		d.UserRating,
+		d.DriverRating,
 	}
 }
 

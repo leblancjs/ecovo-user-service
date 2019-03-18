@@ -15,17 +15,19 @@ func TestUserValidation(t *testing.T) {
 	var location, _ = time.LoadLocation("")
 
 	var user = User{
-		SubID:       "harold|hide.the.pain",
-		Email:       "harold@hide-the-pain.meme",
-		FirstName:   "Harold",
-		LastName:    "The Great",
-		DateOfBirth: time.Date(1950, time.February, 12, 0, 0, 0, 0, location),
-		PhoneNumber: "(450) 123-4567",
-		Gender:      GenderMale,
-		Photo:       "https://hide-the-pain.meme/harold.png",
-		Description: "So much pain.",
-		Preferences: &preferences,
-		SignUpPhase: SignUpPhasePersonalInfo,
+		SubID:        "harold|hide.the.pain",
+		Email:        "harold@hide-the-pain.meme",
+		FirstName:    "Harold",
+		LastName:     "The Great",
+		DateOfBirth:  time.Date(1950, time.February, 12, 0, 0, 0, 0, location),
+		PhoneNumber:  "(450) 123-4567",
+		Gender:       GenderMale,
+		Photo:        "https://hide-the-pain.meme/harold.png",
+		Description:  "So much pain.",
+		Preferences:  &preferences,
+		SignUpPhase:  SignUpPhasePersonalInfo,
+		UserRating:   4,
+		DriverRating: 2,
 	}
 
 	t.Run("Should fail when subscription ID is empty", func(t *testing.T) {
@@ -187,6 +189,42 @@ func TestUserValidation(t *testing.T) {
 		err := u.Validate()
 		if err != nil {
 			t.Error(err)
+		}
+	})
+
+	t.Run("Should fail when user rating is over then 5", func(t *testing.T) {
+		u := user
+		u.UserRating = 6
+
+		if _, ok := u.Validate().(ValidationError); !ok {
+			t.Fail()
+		}
+	})
+
+	t.Run("Should fail when user rating is under then 0", func(t *testing.T) {
+		u := user
+		u.UserRating = -1
+
+		if _, ok := u.Validate().(ValidationError); !ok {
+			t.Fail()
+		}
+	})
+
+	t.Run("Should fail when driver rating is over then 5", func(t *testing.T) {
+		u := user
+		u.DriverRating = 6
+
+		if _, ok := u.Validate().(ValidationError); !ok {
+			t.Fail()
+		}
+	})
+
+	t.Run("Should fail when driver rating is under then 0", func(t *testing.T) {
+		u := user
+		u.DriverRating = -1
+
+		if _, ok := u.Validate().(ValidationError); !ok {
+			t.Fail()
 		}
 	})
 }
