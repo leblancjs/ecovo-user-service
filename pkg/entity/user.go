@@ -102,11 +102,11 @@ func (u *User) Validate() error {
 	}
 
 	if u.UserRating < RatingMinimum || u.UserRating > RatingMaximum {
-		return ValidationError{"user rating is not between 0 and 5"}
+		return ValidationError{fmt.Sprintf("user rating is not between (%d) and (%d)", RatingMinimum, RatingMaximum)}
 	}
 
 	if u.DriverRating < RatingMinimum || u.DriverRating > RatingMaximum {
-		return ValidationError{"driver rating is not between 0 and 5"}
+		return ValidationError{fmt.Sprintf("driver rating is not between (%d) and (%d)", RatingMinimum, RatingMaximum)}
 	}
 
 	return nil
