@@ -16,6 +16,14 @@ type UseCase interface {
 	Delete(ID entity.ID) error
 }
 
+const (
+	// RatingMinimum represents the minimum rating than a user could be have.
+	RatingMinimum = 0
+
+	// RatingMaximum represents the maximum rating than a user could be have.
+	RatingMaximum = 5
+)
+
 // A Service handles the business logic related to users.
 type Service struct {
 	repo Repository
@@ -131,11 +139,11 @@ func (s *Service) Update(modifiedUser *entity.User) error {
 		u.SignUpPhase = modifiedUser.SignUpPhase
 	}
 
-	if modifiedUser.UserRating >= 0 && modifiedUser.UserRating <= 5 {
+	if modifiedUser.UserRating >= RatingMinimum && modifiedUser.UserRating <= RatingMaximum {
 		u.UserRating = modifiedUser.UserRating
 	}
 
-	if modifiedUser.DriverRating >= 0 && modifiedUser.DriverRating <= 5 {
+	if modifiedUser.DriverRating >= RatingMinimum && modifiedUser.DriverRating <= RatingMaximum {
 		u.DriverRating = modifiedUser.DriverRating
 	}
 

@@ -48,6 +48,12 @@ const (
 
 	// SignUpPhaseDone means that the user has completed all sign up phases.
 	SignUpPhaseDone = "done"
+
+	// RatingMinimum represents the minimum rating than a user could be have.
+	RatingMinimum = 0
+
+	// RatingMaximum represents the maximum rating than a user could be have.
+	RatingMaximum = 5
 )
 
 // Validate validates that the user's required fields are filled out correctly.
@@ -95,11 +101,11 @@ func (u *User) Validate() error {
 		return ValidationError{fmt.Sprintf("sign up phase must be %s, %s or %s", SignUpPhasePersonalInfo, SignUpPhasePreferences, SignUpPhaseDone)}
 	}
 
-	if u.UserRating < 0 || u.UserRating > 5 {
+	if u.UserRating < RatingMinimum || u.UserRating > RatingMaximum {
 		return ValidationError{"user rating is not between 0 and 5"}
 	}
 
-	if u.DriverRating < 0 || u.DriverRating > 5 {
+	if u.DriverRating < RatingMinimum || u.DriverRating > RatingMaximum {
 		return ValidationError{"driver rating is not between 0 and 5"}
 	}
 
