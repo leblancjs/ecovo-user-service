@@ -95,11 +95,11 @@ func (u *User) Validate() error {
 		return ValidationError{fmt.Sprintf("sign up phase must be %s, %s or %s", SignUpPhasePersonalInfo, SignUpPhasePreferences, SignUpPhaseDone)}
 	}
 
-	if u.UserRating > 0 || u.UserRating < 5 {
+	if u.UserRating < 0 || u.UserRating > 5 {
 		return ValidationError{"user rating is not between 0 and 5"}
 	}
 
-	if u.DriverRating > 0 || u.DriverRating < 5 {
+	if u.DriverRating < 0 || u.DriverRating > 5 {
 		return ValidationError{"driver rating is not between 0 and 5"}
 	}
 

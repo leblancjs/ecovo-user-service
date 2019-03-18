@@ -131,11 +131,11 @@ func (s *Service) Update(modifiedUser *entity.User) error {
 		u.SignUpPhase = modifiedUser.SignUpPhase
 	}
 
-	if modifiedUser.UserRating <= 0 && modifiedUser.UserRating >= 5 {
+	if modifiedUser.UserRating >= 0 && modifiedUser.UserRating <= 5 {
 		u.UserRating = modifiedUser.UserRating
 	}
 
-	if modifiedUser.DriverRating <= 0 && modifiedUser.DriverRating >= 5 {
+	if modifiedUser.DriverRating >= 0 && modifiedUser.DriverRating <= 5 {
 		u.DriverRating = modifiedUser.DriverRating
 	}
 
