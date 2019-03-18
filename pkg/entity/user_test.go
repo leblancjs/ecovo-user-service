@@ -15,18 +15,18 @@ func TestUserValidation(t *testing.T) {
 	var location, _ = time.LoadLocation("")
 
 	var user = User{
-		SubID:       "harold|hide.the.pain",
-		Email:       "harold@hide-the-pain.meme",
-		FirstName:   "Harold",
-		LastName:    "The Great",
-		DateOfBirth: time.Date(1950, time.February, 12, 0, 0, 0, 0, location),
-		PhoneNumber: "(450) 123-4567",
-		Gender:      GenderMale,
-		Photo:       "https://hide-the-pain.meme/harold.png",
-		Description: "So much pain.",
-		Preferences: &preferences,
-		SignUpPhase: SignUpPhasePersonalInfo,
-		UserRating: 4,
+		SubID:        "harold|hide.the.pain",
+		Email:        "harold@hide-the-pain.meme",
+		FirstName:    "Harold",
+		LastName:     "The Great",
+		DateOfBirth:  time.Date(1950, time.February, 12, 0, 0, 0, 0, location),
+		PhoneNumber:  "(450) 123-4567",
+		Gender:       GenderMale,
+		Photo:        "https://hide-the-pain.meme/harold.png",
+		Description:  "So much pain.",
+		Preferences:  &preferences,
+		SignUpPhase:  SignUpPhasePersonalInfo,
+		UserRating:   4,
 		DriverRating: 2,
 	}
 

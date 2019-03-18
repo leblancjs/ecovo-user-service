@@ -8,20 +8,20 @@ import (
 
 // User contains a user's profile.
 type User struct {
-	ID          ID           `json:"id" bson:"_id,omitempty"`
-	SubID       string       `json:"-" bson:"subId"`
-	Email       string       `json:"email" bson:"email"`
-	FirstName   string       `json:"firstName" bson:"firstName"`
-	LastName    string       `json:"lastName" bson:"lastName"`
-	DateOfBirth time.Time    `json:"dateOfBirth" bson:"dateOfBirth"`
-	PhoneNumber string       `json:"phoneNumber" bson:"phoneNumber"`
-	Gender      string       `json:"gender" bson:"gender"`
-	Photo       string       `json:"photo" bson:"photo"`
-	Description string       `json:"description" bson:"description"`
-	Preferences *Preferences `json:"preferences" bson:"preferences"`
-	SignUpPhase string       `json:"signUpPhase" bson:"signUpPhase"`
-	UserRating	int			`json:"userRating" bson:"userRating"`
-	DriverRating	int			`json:"driverRating" bson:"driverRating"`
+	ID           ID           `json:"id" bson:"_id,omitempty"`
+	SubID        string       `json:"-" bson:"subId"`
+	Email        string       `json:"email" bson:"email"`
+	FirstName    string       `json:"firstName" bson:"firstName"`
+	LastName     string       `json:"lastName" bson:"lastName"`
+	DateOfBirth  time.Time    `json:"dateOfBirth" bson:"dateOfBirth"`
+	PhoneNumber  string       `json:"phoneNumber" bson:"phoneNumber"`
+	Gender       string       `json:"gender" bson:"gender"`
+	Photo        string       `json:"photo" bson:"photo"`
+	Description  string       `json:"description" bson:"description"`
+	Preferences  *Preferences `json:"preferences" bson:"preferences"`
+	SignUpPhase  string       `json:"signUpPhase" bson:"signUpPhase"`
+	UserRating   int          `json:"userRating" bson:"userRating"`
+	DriverRating int          `json:"driverRating" bson:"driverRating"`
 }
 
 const (
