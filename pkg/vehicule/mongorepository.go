@@ -121,7 +121,7 @@ func (r *MongoRepository) FindByUserID(userID entity.ID) ([]*entity.Vehicule, er
 		return nil, fmt.Errorf("vehicule.MongoRepository: no vehicules found with user ID \"%s\" (%s)", userID, err)
 	}
 
-	var vehicules []*entity.Vehicule
+	var vehicules = make([]*entity.Vehicule, 0)
 	for cur.Next(context.TODO()) {
 		var d document
 		err := cur.Decode(&d)
