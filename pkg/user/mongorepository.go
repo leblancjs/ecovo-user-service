@@ -64,8 +64,8 @@ func newDocumentFromEntity(u *entity.User) (*document, error) {
 		u.Description,
 		u.Preferences,
 		u.SignUpPhase,
-		u.UserRating,
-		u.DriverRating,
+		*u.UserRating,
+		*u.DriverRating,
 	}, nil
 }
 
@@ -83,8 +83,8 @@ func (d document) Entity() *entity.User {
 		d.Description,
 		d.Preferences,
 		d.SignUpPhase,
-		d.UserRating,
-		d.DriverRating,
+		&d.UserRating,
+		&d.DriverRating,
 	}
 }
 

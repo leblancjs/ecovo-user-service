@@ -20,8 +20,8 @@ type User struct {
 	Description  string       `json:"description" bson:"description"`
 	Preferences  *Preferences `json:"preferences" bson:"preferences"`
 	SignUpPhase  string       `json:"signUpPhase" bson:"signUpPhase"`
-	UserRating   int          `json:"userRating" bson:"userRating"`
-	DriverRating int          `json:"driverRating" bson:"driverRating"`
+	UserRating   *int         `json:"userRating" bson:"userRating,ommitempty"`
+	DriverRating *int         `json:"driverRating" bson:"driverRating,ommitempty"`
 }
 
 const (
@@ -101,11 +101,11 @@ func (u *User) Validate() error {
 		return ValidationError{fmt.Sprintf("sign up phase must be %s, %s or %s", SignUpPhasePersonalInfo, SignUpPhasePreferences, SignUpPhaseDone)}
 	}
 
-	if u.UserRating < RatingMinimum || u.UserRating > RatingMaximum {
+	if u.UserRating != nil && (*u.UserRating < RatingMinimum || *u.UserRating > RatingMaximum) {
 		return ValidationError{fmt.Sprintf("user rating is not between (%d) and (%d)", RatingMinimum, RatingMaximum)}
 	}
 
-	if u.DriverRating < RatingMinimum || u.DriverRating > RatingMaximum {
+	if u.DriverRating != nil && (*u.DriverRating < RatingMinimum || *u.DriverRating > RatingMaximum) {
 		return ValidationError{fmt.Sprintf("driver rating is not between (%d) and (%d)", RatingMinimum, RatingMaximum)}
 	}
 

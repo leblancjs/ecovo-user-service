@@ -49,6 +49,11 @@ func (s *Service) Register(u *entity.User) (*entity.User, error) {
 
 	u.SignUpPhase = entity.SignUpPhasePreferences
 
+	u.UserRating = new(int)
+	*u.UserRating = 0
+	u.DriverRating = new(int)
+	*u.DriverRating = 0
+
 	err = u.Validate()
 	if err != nil {
 		return nil, err
@@ -139,11 +144,13 @@ func (s *Service) Update(modifiedUser *entity.User) error {
 		u.SignUpPhase = modifiedUser.SignUpPhase
 	}
 
-	if modifiedUser.UserRating >= RatingMinimum && modifiedUser.UserRating <= RatingMaximum {
+	if modifiedUser.UserRating != nil &&
+		(*modifiedUser.UserRating >= RatingMinimum && *modifiedUser.UserRating <= RatingMaximum) {
 		u.UserRating = modifiedUser.UserRating
 	}
 
-	if modifiedUser.DriverRating >= RatingMinimum && modifiedUser.DriverRating <= RatingMaximum {
+	if modifiedUser.DriverRating != nil &&
+		(*modifiedUser.DriverRating >= RatingMinimum && *modifiedUser.DriverRating <= RatingMaximum) {
 		u.DriverRating = modifiedUser.DriverRating
 	}
 
