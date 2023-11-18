@@ -1,6 +1,6 @@
 FROM golang:alpine AS build
 
-ARG TARGETPLATFORM
+ARG TARGETARCH
 
 ENV PROJECT_NAME=azure.com/ecovo/user-service
 ENV BINARY_NAME=user-service
@@ -20,7 +20,7 @@ WORKDIR $GOPATH/src/${PROJECT_NAME}/cmd
 RUN go mod download
 
 # Build the project
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETPLATFORM} go build -ldflags '-w -s' -o /bin/${BINARY_NAME}
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -ldflags '-w -s' -o /bin/${BINARY_NAME}
 
 # Expose port
 EXPOSE 8080/tcp
